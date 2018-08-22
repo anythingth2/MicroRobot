@@ -8,13 +8,13 @@
 
 int distanceLeft=0,distanceRight=0;
 int meanDistance=0;
-int basePower = 50;
+int basePower = 65;
 float KP = 1.5;
 float K_angle = 2.488 * 1.1;
-int defaultGyroRate = 0;
-float KpGyro = 0.5;
+int defaultGyro = 0;
+float KpGyro = 0.75;
 float KiGyro = 0;
-float KdGyro = 0.5;
+float KdGyro = 0.35;
 void moveForward(int t){
 	t *= 10*1.25;
 	for(int i=0;i<t;i++){
@@ -31,15 +31,19 @@ void moveForward(int t){
 int lastGyroErr=0;
 int gyroErr = 0;
 int sumGyroErr =0;
-void moveForwardWithGyro(){
-		int gyroRate = getGyroRate(gyroSensor);
-		gyroErr = defaultGyroRate - gyroRate;
+void moveForwardWithGyro(int block){
+	float t = block * 0.95*1000;
+
+	for(int i = 0;i<t;i+=25){
+		gyroErr = getGyroDegrees(gyroSensor) + defaultGyro;
+
 		sumGyroErr += gyroErr;
-		motor[leftMotor] = basePower+3 + gyroErr*KpGyro + KiGyro*sumGyroErr - KdGyro*(lastGyroErr - gyroErr) ;
-		motor[rightMotor] = basePower - gyroErr*KpGyro - KiGyro*sumGyroErr + KdGyro*(lastGyroErr - gyroErr);
+		motor[rightMotor] = basePower + KpGyro*gyroErr + KiGyro*sumGyroErr + KdGyro*(lastGyroErr - gyroErr);
+		motor[leftMotor] = basePower -  KpGyro*gyroErr - KiGyro*sumGyroErr - KdGyro*(lastGyroErr - gyroErr) ;
 
 		lastGyroErr = gyroErr;
 		wait1Msec(25);
+	}
 }
 void turn(int angle){
 	setMotorTarget(leftMotor,-angle*K_angle,basePower/2);
@@ -50,18 +54,37 @@ void turn(int angle){
 	resetMotorEncoder(leftMotor);
 	resetMotorEncoder(rightMotor);
 }
+void turnWithGyro(){
+	resetGyro(gyroSensor);
 
+
+	int gyro = getGyroDegrees(gyroSensor);
+	while(gyro > -90){
+		motor[leftMotor] = -basePower/5;
+		motor[rightMotor] = basePower/5;
+		wait1Msec(10);
+		gyro = getGyroDegrees(gyroSensor);
+	}
+	resetGyro(gyroSensor);
+}
+
+void run(){
+	for(int i=0;i<5;i++){
+		moveForwardWithGyro(10-i*2-1);
+		turnWithGyro();
+		moveForwardWithGyro(10-i*2-1);
+		turnWithGyro();
+	}
+}
 task main()
 {
 
 	resetMotorEncoder(leftMotor);
 	resetMotorEncoder(rightMotor);
-
-	defaultGyroRate = getGyroRate(gyroSensor);
-
-	for(int i=0;i<1000;i++){
-		moveForwardWithGyro();
-	}
+	resetGyro(gyroSensor);
+	//defaultGyro = getGyroDegrees(gyroSensor);
+	//turnWithGyro();
+	run();
 
 
 
