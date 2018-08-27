@@ -33,9 +33,13 @@ int gyroErr = 0;
 int sumGyroErr =0;
 void moveForwardWithGyro(int block){
 	float t = block * 0.95*1000;
-
-	for(int i = 0;i<t;i+=25){
+	int length = 602*block;
+	resetMotorEncoder(leftMotor);
+	resetMotorEncoder(rightMotor);
+	int distance = (getMotorEncoder(leftMotor) + getMotorEncoder(rightMotor))/2;
+	while(distance <  length){
 		gyroErr = getGyroDegrees(gyroSensor) + defaultGyro;
+		distance = (getMotorEncoder(leftMotor) + getMotorEncoder(rightMotor))/2;
 
 		sumGyroErr += gyroErr;
 		motor[rightMotor] = basePower + KpGyro*gyroErr + KiGyro*sumGyroErr + KdGyro*(lastGyroErr - gyroErr);
