@@ -10,7 +10,7 @@
 int lastGyroErr=0;
 int gyroErr = 0;
 int sumGyroErr =0;
-int basePower = 80;
+int basePower = 60;
 float KP = 1.5;
 float K_angle = 2.488 * 1.1;
 int defaultGyro = 0;
