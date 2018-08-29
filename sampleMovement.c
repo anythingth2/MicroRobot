@@ -14,16 +14,16 @@ int basePower = 80;
 float KP = 1.5;
 float K_angle = 2.488 * 1.1;
 int defaultGyro = 0;
-float KpGyro = 2.5;
-float KiGyro = 0.1;
-float KdGyro = 2.5;
+float KpGyro = 1.8;
+float KiGyro = 0.04;
+float KdGyro = 2.75;
 
 
 
 
 void moveForwardWithGyro(int block){
 	float t = block * 0.95*1000;
-	int length = 585*block;
+	int length = 560*block;
 	resetMotorEncoder(leftMotor);
 	resetMotorEncoder(rightMotor);
 	int distance = (getMotorEncoder(leftMotor) + getMotorEncoder(rightMotor))/2;
@@ -67,7 +67,7 @@ void turnWithGyro(){
 	}
 	motor[leftMotor]=0;
 	motor[rightMotor]=0;
-	wait1Msec(500);
+	wait1Msec(1000);
 
 	resetGyro(gyroSensor);
 }
@@ -78,7 +78,12 @@ void run(){
 		turnWithGyro();
 		moveForwardWithGyro(10-i*2-1);
 		turnWithGyro();
+		//basePower -= 10;
 	}
+	motor[leftMotor] = 100;
+	motor[rightMotor] = -100;
+
+	wait1Msec(10000);
 }
 task main()
 {
