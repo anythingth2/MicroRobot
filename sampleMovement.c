@@ -10,7 +10,7 @@
 int lastGyroErr=0;
 int gyroErr = 0;
 int sumGyroErr =0;
-int basePower = 60;
+int basePower = 80;
 float KP = 1.5;
 float K_angle = 2.488 * 1.1;
 int defaultGyro = 0;
@@ -20,10 +20,10 @@ float KdGyro = 2.75;
 
 
 
-
+int lengthPerBlock = 560;
 void moveForwardWithGyro(int block){
 	float t = block * 0.95*1000;
-	int length = 560*block;
+	int length = lengthPerBlock*block;
 	resetMotorEncoder(leftMotor);
 	resetMotorEncoder(rightMotor);
 	int distance = (getMotorEncoder(leftMotor) + getMotorEncoder(rightMotor))/2;
@@ -57,7 +57,7 @@ void turnWithGyro(){
 	int err;
 
 	int gyro = getGyroDegrees(gyroSensor);
-	while(gyro >= expect+2){
+	while(gyro >= expect+5){
 		gyro = getGyroDegrees(gyroSensor);
 		err = expect - gyro;
 		motor[leftMotor] = (Kp*err);
@@ -78,10 +78,8 @@ void run(){
 		turnWithGyro();
 		moveForwardWithGyro(10-i*2-1);
 		turnWithGyro();
-		//basePower -= 10;
+		lengthPerBlock += 10;
 	}
-	motor[leftMotor] = 100;
-	motor[rightMotor] = -100;
 
 	wait1Msec(10000);
 }
