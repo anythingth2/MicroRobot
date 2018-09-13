@@ -7,13 +7,6 @@
 #define WEST 3
 FILE *mapFile;
 char map[SIZE][SIZE + 1];
-unsigned short int ONE_LEFT = 0b100;
-unsigned short int ONE_FRONT = 0b010;
-unsigned short int ONE_RIGHT = 0b001;
-unsigned short int LEFT_FRONT = 0b110;
-unsigned short int LEFT_RIGHT = 0b101;
-unsigned short int RIGHT_FRONT = 0b011;
-unsigned short int ALL = 0b111;
 
 typedef struct _Block
 {
@@ -117,10 +110,11 @@ void printStack()
 
 int isWall(Block block)
 {
-    return map[block.y][block.x] == '+';
+    return map[block.y][block.x] == '+' ? 1 : 0;
 }
 int tryTraverseLeft()
 {
+    printf("try traverse left\t");
     Block nextBlock = car;
     int nextDirection;
     switch (direction)
@@ -147,12 +141,20 @@ int tryTraverseLeft()
     {
         car = nextBlock;
         direction = nextDirection;
+        printf("done");
     }
-    return isWall(nextBlock);
+    else
+    {
+        printf("failed");
+    }
+
+    printf("\n");
+    return !isWall(nextBlock);
 }
 
 int tryTraverseFront()
 {
+    printf("try traverse front\t");
     Block nextBlock = car;
     int nextDirection;
     switch (direction)
@@ -179,12 +181,19 @@ int tryTraverseFront()
     {
         car = nextBlock;
         direction = nextDirection;
+        printf("done");
     }
-    return isWall(nextBlock);
+    else
+    {
+        printf("failed");
+    }
+    printf("\n");
+    return !isWall(nextBlock);
 }
 
 int tryTraverseRight()
 {
+    printf("try traverse right\t");
     Block nextBlock = car;
     int nextDirection;
     switch (direction)
@@ -211,35 +220,99 @@ int tryTraverseRight()
     {
         car = nextBlock;
         direction = nextDirection;
+        printf("done");
     }
-    return isWall(nextBlock);
+    else
+    {
+        printf("failed");
+    }
+
+    printf("\n");
+    return !isWall(nextBlock);
 }
+int tryTraverseBack()
+{
+    printf("try traverse BACK!\t");
+    Block nextBlock = car;
+    int nextDirection;
+    switch (direction)
+    {
+    case NORTH:
+        nextDirection = SOUTH;
+        nextBlock.y++;
+        break;
+    case EAST:
+        nextDirection = WEST;
+        nextBlock.x--;
+        break;
+    case SOUTH:
+        nextDirection = NORTH;
+        nextBlock.y--;
+        break;
+    case WEST:
+        nextDirection = EAST;
+        nextBlock.x++;
+        break;
+    }
+    // printf("%d\n", nextDirection);
+    if (!isWall(nextBlock))
+    {
+        car = nextBlock;
+        direction = nextDirection;
+        printf("done");
+    }
+    else
+    {
+        printf("failed");
+    }
+
+    printf("\n");
+    return !isWall(nextBlock);
+}
+
 int main()
 {
-    car = createBlock(8, 8, -1);
+    car = createBlock(9, 9, -1);
     direction = NORTH;
 
     loadMap();
     showMovementOnMap(car, direction);
-
-    do
+    int nextState = 1;
+    int state = 0;
+    while (getch() != 'q')
     {
-        switch (getch())
+        int result = -1;
+        switch (state)
         {
-        case 'a':
-            tryTraverseLeft();
+        case 0:
+
+            if (tryTraverseLeft())
+                nextState = 0;
+            else
+                nextState = 1;
             break;
-        case 'w':
-            tryTraverseFront();
+        case 1:
+            if (tryTraverseFront())
+                nextState = 0;
+            else
+                nextState = 2;
             break;
-        case 'd':
-            tryTraverseRight();
+        case 2:
+            if (tryTraverseRight())
+                nextState = 0;
+            else
+                nextState = 3;
             break;
-        case 'q':
-            return 0;
+        case 3:
+            if (tryTraverseBack())
+                nextState = 0;
+            else
+                nextState = 4;
+            break;
         }
+        state = nextState;
         showMovementOnMap(car, direction);
-    } while (1);
+    }
 
     return 0;
 }
