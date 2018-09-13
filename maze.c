@@ -14,6 +14,7 @@ typedef struct _Block
     int type;
 } Block;
 Block car;
+Block goal;
 int direction = 0;
 
 Block createBlock(int x, int y, int type)
@@ -43,7 +44,6 @@ void showMap()
     for (i = 0; i < SIZE; i++)
     {
         printf("%s\n", map[i]);
-        // printf("%s",map[i]);
     }
     printf("\n");
 }
@@ -270,9 +270,12 @@ int tryTraverseBack()
     return !isWall(nextBlock);
 }
 
+int isGoal(Block block) { return block.x == goal.x && block.y == goal.y; }
+
 int main()
 {
     car = createBlock(9, 9, -1);
+    goal = createBlock(5, 5, -1);
     direction = NORTH;
 
     loadMap();
@@ -281,37 +284,44 @@ int main()
     int state = 0;
     while (getch() != 'q')
     {
-        int result = -1;
         switch (state)
         {
+        case -1:
+            
+            nextState = 0;
+            break;
         case 0:
-
             if (tryTraverseLeft())
-                nextState = 0;
+                nextState = -1;
             else
                 nextState = 1;
             break;
         case 1:
             if (tryTraverseFront())
-                nextState = 0;
+                nextState = -1;
             else
                 nextState = 2;
             break;
         case 2:
             if (tryTraverseRight())
-                nextState = 0;
+                nextState = -1;
             else
                 nextState = 3;
             break;
         case 3:
             if (tryTraverseBack())
-                nextState = 0;
+                nextState = -1;
             else
                 nextState = 4;
             break;
         }
         state = nextState;
         showMovementOnMap(car, direction);
+        if (isGoal(car))
+        {
+            printf("GOAL!\n\n\n");
+            return 0;
+        }
     }
 
     return 0;
