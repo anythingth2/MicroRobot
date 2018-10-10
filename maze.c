@@ -43,7 +43,11 @@ void showMap()
     int i = 0;
     for (i = 0; i < SIZE; i++)
     {
-        printf("%s\n", map[i]);
+        for (int j = 0; j < SIZE - 2; j++)
+        {
+            printf("%c", map[i][j]);
+        }
+        printf("@\n");
     }
     printf("\n");
 }
@@ -78,10 +82,55 @@ void showMovementOnMap(Block block, int direction)
         }
     }
 
-    localMap[block.y][block.x] = getDirectionChar(direction);
+    // localMap[block.y][block.x] = getDirectionChar(direction);
+    int textMapSize = SIZE * 3;
+
+    char textMap[textMapSize][textMapSize + 1];
+
+    for (i = 0; i < textMapSize; i++)
+    {
+        for (int j = 0; j < textMapSize + 1; j++)
+        {
+            textMap[i][j] = ' ';
+        }
+    }
+
     for (i = 0; i < SIZE; i++)
     {
-        printf("%s\n", localMap[i]);
+        for (int j = 0; j < SIZE; j++)
+        {
+            // printf("%c", localMap[i][j]);
+            char block = localMap[i][j];
+            textMap[i * 3 + 1][j * 3 + 2] = block & 0b1000 ? 240 : ' ';
+            textMap[i * 3][j * 3 + 1] = block & 0b0100 ? 240 : ' ';
+            textMap[i * 3 + 1][j * 3] = block & 0b0010 ? 240 : ' ';
+            textMap[i * 3 + 2][j * 3 + 1] = block & 0b0001 ? 240 : ' ';
+            char carChar;
+            switch (getDirectionChar(direction))
+            {
+            case 'N':
+                carChar = '^';
+                break;
+            case 'W':
+                carChar = '<';
+                break;
+            case 'S':
+                carChar = 'v';
+                break;
+            case 'E':
+                carChar = '>';
+                break;
+            default:
+                carChar = 'X';
+            }
+        }
+        // printf("\n");
+    }
+    for (i = 0; i < textMapSize; i++)
+    {
+        for (int j = 0; j < textMapSize; j++)
+            printf("%c", textMap[i][j]);
+        printf("\n");
     }
     printf("\n");
 }
@@ -280,49 +329,49 @@ int main()
 
     loadMap();
     showMovementOnMap(car, direction);
-    int nextState = 1;
-    int state = 0;
-    while (getch() != 'q')
-    {
-        switch (state)
-        {
-        case -1:
-            
-            nextState = 0;
-            break;
-        case 0:
-            if (tryTraverseLeft())
-                nextState = -1;
-            else
-                nextState = 1;
-            break;
-        case 1:
-            if (tryTraverseFront())
-                nextState = -1;
-            else
-                nextState = 2;
-            break;
-        case 2:
-            if (tryTraverseRight())
-                nextState = -1;
-            else
-                nextState = 3;
-            break;
-        case 3:
-            if (tryTraverseBack())
-                nextState = -1;
-            else
-                nextState = 4;
-            break;
-        }
-        state = nextState;
-        showMovementOnMap(car, direction);
-        if (isGoal(car))
-        {
-            printf("GOAL!\n\n\n");
-            return 0;
-        }
-    }
+    // int nextState = 1;
+    // int state = 0;
+    // while (getch() != 'q')
+    // {
+    //     switch (state)
+    //     {
+    //     case -1:
+
+    //         nextState = 0;
+    //         break;
+    //     case 0:
+    //         if (tryTraverseLeft())
+    //             nextState = -1;
+    //         else
+    //             nextState = 1;
+    //         break;
+    //     case 1:
+    //         if (tryTraverseFront())
+    //             nextState = -1;
+    //         else
+    //             nextState = 2;
+    //         break;
+    //     case 2:
+    //         if (tryTraverseRight())
+    //             nextState = -1;
+    //         else
+    //             nextState = 3;
+    //         break;
+    //     case 3:
+    //         if (tryTraverseBack())
+    //             nextState = -1;
+    //         else
+    //             nextState = 4;
+    //         break;
+    //     }
+    //     state = nextState;
+    //     showMovementOnMap(car, direction);
+    //     if (isGoal(car))
+    //     {
+    //         printf("GOAL!\n\n\n");
+    //         return 0;
+    //     }
+    // }
 
     return 0;
 }
