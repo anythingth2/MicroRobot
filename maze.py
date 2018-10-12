@@ -5,8 +5,12 @@ mapData = []
 size = 11
 with open('map.txt','r') as f:
     mapData = [line[:len(line)-1] for line in f.readlines()]
-    # mapData = [ for line in mapData]
-# print(mapData)
+    for i in range(len(mapData)):
+        data = []
+        for j in range(len(mapData[i])):
+            data.append(ord(mapData[i][j]) - ord('A'))
+        mapData[i] = data
+
 
 class SimulateMap:
     
@@ -22,7 +26,6 @@ class SimulateMap:
     def drawGrid(self,x,y,_type):
         radius = int(self.size *1.0)
         thickness = 5
-        _type = ord(_type) - ord('A')
         x *= self.size
         y *= self.size
         if _type & 0b1000:
@@ -57,12 +60,31 @@ class SimulateMap:
 
         M = cv2.getRotationMatrix2D((cols/2,rows/2),angle,1)
         tempArrow = cv2.warpAffine(self.arrow,M,(cols,rows))
-
-        tempMap[y:y+self.arrowSize,x:x+self.arrowSize] = tempArrow
-        
+        baseX = int(x*(self.size+0.5))
+        baseY = int(y*(self.size+0.5)) 
+        tempMap[baseY:baseY+self.arrowSize ,baseX:baseX+self.arrowSize] = tempArrow
         cv2.imshow('f',tempMap)
-        cv2.waitKey(t)
+        cv2.waitKey(t*10**3)
         pass
+
+carX = 8
+carY = 8
+carDirection = 'S'
 simulateMap = SimulateMap(size,50)
 simulateMap.readMap(mapData)
-simulateMap.showMapWithCar(0,4,4,'E')
+
+
+def move(direction):
+    global carX,carY,carDirection
+    if direction == 'N':
+        carY -= 1
+    elif direction == 'W':
+        carX -= 1
+    elif direction == 'S':
+        carY += 1
+    elif direction == 'E':
+        carX += 1
+
+for i in range(10):
+    move(carDirection)
+    simulateMap.showMapWithCar(0,carX,carY,carDirection)
