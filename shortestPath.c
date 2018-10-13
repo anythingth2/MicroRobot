@@ -4,11 +4,13 @@
 int map[SIZE][SIZE];
 typedef struct _Block
 {
+    int type;
     int direction;
     int fromX, fromY;
     int isNewEdge;
     int isTraveled;
     int isUpdating;
+    int carWentedDirection;
 } Block;
 void loadMap()
 {
@@ -34,6 +36,7 @@ void loadMap()
 }
 
 Block pathMap[SIZE][SIZE];
+Block searchMap[SIZE][SIZE];
 void initPathMap()
 {
     for (int i = 0; i < SIZE; i++)
@@ -43,6 +46,18 @@ void initPathMap()
             pathMap[i][j].isTraveled = 0;
             pathMap[i][j].isUpdating = 0;
             pathMap[i][j].isNewEdge = 0;
+        }
+    }
+}
+
+void initSearchMap()
+{
+    for (int i = 0; i < SIZE; i++)
+    {
+        for (int j = 0; j < SIZE; j++)
+        {
+            searchMap[i][j].carWentedDirection = -1;
+            searchMap[i][j].type = 0;
         }
     }
 }
@@ -71,7 +86,7 @@ void showStep()
 
             if (pathMap[i][j].isTraveled)
             {
-                printf("%c",getDirectionSymbol(pathMap[i][j].direction));
+                printf("%c", getDirectionSymbol(pathMap[i][j].direction));
             }
             else
             {
@@ -173,7 +188,7 @@ void flood()
         }
     }
 }
-
+int carX, carY, carDirection;
 int startX = 8, startY = 8;
 int endX = 4, endY = 4;
 int wayStack[81];
@@ -203,16 +218,124 @@ void makeWay()
         y = nextY;
     }
 }
-int main()
+int checkWall(int x, int y, int carDirection, int turn)
 {
-    loadMap();
+    //turn : -1 = check left of car
+    //turn :  0 = check front of car
+    //turn :  1 = check right of car
 
-    // pathMap[startY][startX].isTraveled = 1;
+    int checkAt;
+    switch ((carDirection + turn) & 0b11)
+    {
+    case 0:
+        checkAt = 0b0010;
+        break;
+    case 1:
+        checkAt = 0b0001;
+        break;
+    case 2:
+        checkAt = 0b1000;
+        break;
+    case 3:
+        checkAt = 0b0100;
+        break;
+    }
+    printf("map:%d\tx:%d\ty:%d\tcarDirection:%d\tturn:%d\tcheckAt:%d\tResult:%d\t\n",
+           map[y][x],
+           x,
+           y,
+           carDirection,
+           turn,
+           checkAt,
+           (map[y][x] & (checkAt)) == (checkAt));
+    return (map[y][x] & (checkAt)) == (checkAt);
+}
+void move()
+{
+    switch (carDirection)
+    {
+    case 0:
+        carY--;
+        break;
+    case 1:
+        carX++;
+        break;
+    case 2:
+        carY++;
+        break;
+    case 3:
+        carX--;
+        break;
+    }
+}
+void turn(int to)
+{
+    carDirection = (carDirection + to) & 0b11;
+}
+void showSearchStep()
+{
+    for (int i = 0; i < SIZE; i++)
+    {
+        for (int j = 0; j < SIZE; j++)
+        {
+            if (searchMap[i][j].carWentedDirection != -1)
+            {
+                printf(" %d", searchMap[i][j].carWentedDirection);
+            }
+            else
+            {
+                printf("%d", -1);
+            }
+        }
+        printf("\n");
+    }
+    printf("direction %d\t%c\n", carDirection, getDirectionSymbol(carDirection));
+}
+void search()
+{
+
+    while (getch() != 'q')
+    {
+        if (searchMap[carY][carX].carWentedDirection < 3)
+        {
+            searchMap[carY][carX].carWentedDirection++;
+            if (checkWall(carX, carY, carDirection, searchMap[carY][carX].carWentedDirection - 1))
+            {
+                int wall;
+                switch (carDirection + (searchMap[carY][carX].carWentedDirection - 1))
+                {
+                case 0:
+                    wall = 0b0010;
+                    break;
+                case 1:
+                    wall = 0b0001;
+                    break;
+                case 2:
+                    wall = 0b1000;
+                    break;
+                case 3:
+                    wall = 0b0100;
+                    break;
+                }
+                searchMap[carY][carX].type |= wall;
+            }
+            else
+            {
+                turn(searchMap[carY][carX].carWentedDirection - 1);
+                move();
+                printf("move!\n");
+            }
+            showSearchStep();
+        }
+    }
+}
+
+void findShortestPath()
+{
     pathMap[startY][startX].isNewEdge = 1;
 
     while (getch() != 'q')
     {
-
         flood();
         if (pathMap[endY][endX].isNewEdge || pathMap[endY][endX].isTraveled)
             break;
@@ -222,5 +345,17 @@ int main()
     printf("\n\n");
     for (int i = 0; i < topOfStack; i++)
         printf("%c", getDirectionSymbol(wayStack[i]));
+}
+int main()
+{
+    initPathMap();
+    initSearchMap();
+    loadMap();
+    carX = startX;
+    carY = startY;
+    carDirection = 0;
+    search();
+    // findShortestPath();
+
     return 1;
 }
