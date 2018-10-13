@@ -56,6 +56,7 @@ void initSearchMap()
     {
         for (int j = 0; j < SIZE; j++)
         {
+            searchMap[i][j].direction = -1;
             searchMap[i][j].carWentedDirection = -1;
             searchMap[i][j].type = 0;
         }
@@ -240,14 +241,14 @@ int checkWall(int x, int y, int carDirection, int turn)
         checkAt = 0b0100;
         break;
     }
-    printf("map:%d\tx:%d\ty:%d\tcarDirection:%d\tturn:%d\tcheckAt:%d\tResult:%d\t\n",
-           map[y][x],
-           x,
-           y,
-           carDirection,
-           turn,
-           checkAt,
-           (map[y][x] & (checkAt)) == (checkAt));
+    // printf("map:%d\tx:%d\ty:%d\tcarDirection:%d\tturn:%d\tcheckAt:%d\tResult:%d\t\n",
+    //        map[y][x],
+    //        x,
+    //        y,
+    //        carDirection,
+    //        turn,
+    //        checkAt,
+    //        (map[y][x] & (checkAt)) == (checkAt));
     return (map[y][x] & (checkAt)) == (checkAt);
 }
 void move()
@@ -268,9 +269,38 @@ void move()
         break;
     }
 }
+
+void moveBack()
+{
+    switch (carDirection)
+    {
+    case 0:
+        carY++;
+        break;
+    case 1:
+        carX--;
+        break;
+    case 2:
+        carY--;
+        break;
+    case 3:
+        carX++;
+        break;
+    }
+}
 void turn(int to)
 {
     carDirection = (carDirection + to) & 0b11;
+    printf("turn %d\n", to);
+}
+void turnTo(int direction)
+{
+    printf("turnTo from %d to %d\n", carDirection, direction);
+    while (carDirection != direction)
+    {
+        turn(1);
+    }
+    printf("result %d -> %d\n", carDirection, direction);
 }
 void showSearchStep()
 {
@@ -291,14 +321,44 @@ void showSearchStep()
     }
     printf("direction %d\t%c\n", carDirection, getDirectionSymbol(carDirection));
 }
+void showSearchDirectionStep()
+{
+    for (int i = 0; i < SIZE; i++)
+    {
+        for (int j = 0; j < SIZE; j++)
+        {
+            printf("%c ", getDirectionSymbol(searchMap[i][j].direction));
+        }
+        printf("\n");
+    }
+}
+
+void showSearchCar()
+{
+    for (int i = 0; i < SIZE; i++)
+    {
+        for (int j = 0; j < SIZE; j++)
+        {
+            if (i == carY && j == carX)
+                printf("%c", getDirectionSymbol(carDirection));
+            else
+                printf(" ");
+        }
+        printf("\n");
+    }
+}
 void search()
 {
 
+    int step = 0;
     while (getch() != 'q')
     {
-        if (searchMap[carY][carX].carWentedDirection < 3)
+        printf("step %d \t  ==========================================\n", step);
+
+        if (searchMap[carY][carX].carWentedDirection < 2)
         {
             searchMap[carY][carX].carWentedDirection++;
+
             if (checkWall(carX, carY, carDirection, searchMap[carY][carX].carWentedDirection - 1))
             {
                 int wall;
@@ -318,15 +378,41 @@ void search()
                     break;
                 }
                 searchMap[carY][carX].type |= wall;
+                printf("check %d not move\n", searchMap[carY][carX].carWentedDirection);
+                showSearchStep();
+                // showSearchDirectionStep();
+                // showSearchCar();
             }
             else
             {
-                turn(searchMap[carY][carX].carWentedDirection - 1);
+                if (searchMap[carY][carX].carWentedDirection - 1 != 0)
+                    turn(searchMap[carY][carX].carWentedDirection - 1);
+
                 move();
-                printf("move!\n");
+                if (searchMap[carY][carX].carWentedDirection != -1)
+                {
+                    moveBack();
+                    turnTo(searchMap[carY][carX].direction);
+                    searchMap[carY][carX].carWentedDirection++;
+                }
+                searchMap[carY][carX].direction = carDirection;
+                showSearchStep();
+                // showSearchDirectionStep();
+                // showSearchCar();
+                printf("check %d move to %d\n", searchMap[carY][carX].carWentedDirection);
             }
-            showSearchStep();
         }
+        else
+        {
+            moveBack();
+            turnTo(searchMap[carY][carX].direction);
+            showSearchStep();
+            // showSearchDirectionStep();
+            // showSearchCar();
+            printf("moveBack!\n");
+        }
+        printf("carX:%d\tcarY:%d\tcarDirection:%d\n", carX, carY, carDirection);
+        printf("end step %d \t  ==========================================\n", step++);
     }
 }
 

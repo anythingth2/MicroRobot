@@ -233,9 +233,10 @@ def runLeftHandMethod():
         turnRight()
         turnRight()
 
-for i in range(100):
-    runLeftHandMethod()
+realSimulateMap.showMap(0)
+# for i in range(100):
+#     runLeftHandMethod()
     
-    realSimulateMap.showMapWithCar(0,carX,carY,carDirection)
-    carSimulateMap.readMap(carMap)
-    carSimulateMap.showMap(0)
+#     realSimulateMap.showMapWithCar(0,carX,carY,carDirection)
+#     carSimulateMap.readMap(carMap)
+#     carSimulateMap.showMap(0)
