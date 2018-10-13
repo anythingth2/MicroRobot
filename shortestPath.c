@@ -71,7 +71,7 @@ void showStep()
 
             if (pathMap[i][j].isTraveled)
             {
-                printf("O");
+                printf("%c",getDirectionSymbol(pathMap[i][j].direction));
             }
             else
             {
