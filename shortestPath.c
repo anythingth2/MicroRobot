@@ -131,6 +131,43 @@ void showStepInfo()
         printf("\n");
     }
 }
+
+int checkWall(int x, int y, int carDirection, int turn)
+{
+    //turn : -1 = check left of car
+    //turn :  0 = check front of car
+    //turn :  1 = check right of car
+
+    int checkAt;
+    switch ((carDirection + turn) & 0b11)
+    {
+    case 0:
+        checkAt = 0b0010;
+        break;
+    case 1:
+        checkAt = 0b0001;
+        break;
+    case 2:
+        checkAt = 0b1000;
+        break;
+    case 3:
+        checkAt = 0b0100;
+        break;
+    }
+    // printf("map:%d\tx:%d\ty:%d\tcarDirection:%d\tturn:%d\tcheckAt:%d\tResult:%d\t\n",
+    //        map[y][x],
+    //        x,
+    //        y,
+    //        carDirection,
+    //        turn,
+    //        checkAt,
+    //        (map[y][x] & (checkAt)) == (checkAt));
+
+    
+    return (map[y][x] & (checkAt)) == (checkAt);
+}
+
+// wait for integrate
 void flood()
 {
 
@@ -138,7 +175,6 @@ void flood()
     {
         for (int x = 0; x < SIZE; x++)
         {
-
             if (pathMap[y][x].isNewEdge && !pathMap[y][x].isTraveled)
             {
 
@@ -190,7 +226,7 @@ void flood()
     }
 }
 int carX, carY, carDirection;
-int startX = 8, startY = 8;
+int startX = 0, startY = 6;
 int endX = 4, endY = 4;
 int wayStack[81];
 int topOfStack = 0;
@@ -219,38 +255,7 @@ void makeWay()
         y = nextY;
     }
 }
-int checkWall(int x, int y, int carDirection, int turn)
-{
-    //turn : -1 = check left of car
-    //turn :  0 = check front of car
-    //turn :  1 = check right of car
 
-    int checkAt;
-    switch ((carDirection + turn) & 0b11)
-    {
-    case 0:
-        checkAt = 0b0010;
-        break;
-    case 1:
-        checkAt = 0b0001;
-        break;
-    case 2:
-        checkAt = 0b1000;
-        break;
-    case 3:
-        checkAt = 0b0100;
-        break;
-    }
-    // printf("map:%d\tx:%d\ty:%d\tcarDirection:%d\tturn:%d\tcheckAt:%d\tResult:%d\t\n",
-    //        map[y][x],
-    //        x,
-    //        y,
-    //        carDirection,
-    //        turn,
-    //        checkAt,
-    //        (map[y][x] & (checkAt)) == (checkAt));
-    return (map[y][x] & (checkAt)) == (checkAt);
-}
 void move()
 {
     switch (carDirection)
@@ -302,6 +307,7 @@ void turnTo(int direction)
     }
     printf("result %d -> %d\n", carDirection, direction);
 }
+//integrated
 void showSearchStep()
 {
     for (int i = 0; i < SIZE; i++)
@@ -321,6 +327,7 @@ void showSearchStep()
     }
     printf("direction %d\t%c\n", carDirection, getDirectionSymbol(carDirection));
 }
+//integrated
 void showSearchDirectionStep()
 {
     for (int i = 0; i < SIZE; i++)
@@ -332,7 +339,7 @@ void showSearchDirectionStep()
         printf("\n");
     }
 }
-
+//integrated
 void showSearchCar()
 {
     for (int i = 0; i < SIZE; i++)
@@ -347,6 +354,8 @@ void showSearchCar()
         printf("\n");
     }
 }
+
+//integrated
 void search()
 {
 
@@ -378,7 +387,7 @@ void search()
                     break;
                 }
                 searchMap[carY][carX].type |= wall;
-                printf("check %d not move\n", searchMap[carY][carX].carWentedDirection);
+                // printf("check %d not move\n", searchMap[carY][carX].carWentedDirection);
                 showSearchStep();
                 // showSearchDirectionStep();
                 // showSearchCar();
@@ -399,7 +408,7 @@ void search()
                 showSearchStep();
                 // showSearchDirectionStep();
                 // showSearchCar();
-                printf("check %d move to %d\n", searchMap[carY][carX].carWentedDirection);
+                // printf("check %d move to %d\n", searchMap[carY][carX].carWentedDirection);
             }
         }
         else
