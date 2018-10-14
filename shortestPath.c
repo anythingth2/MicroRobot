@@ -163,7 +163,6 @@ int checkWall(int x, int y, int carDirection, int turn)
     //        checkAt,
     //        (map[y][x] & (checkAt)) == (checkAt));
 
-    
     return (map[y][x] & (checkAt)) == (checkAt);
 }
 
@@ -226,7 +225,7 @@ void flood()
     }
 }
 int carX, carY, carDirection;
-int startX = 0, startY = 6;
+int startX = 0, startY = 0,startDirection = 1;
 int endX = 4, endY = 4;
 int wayStack[81];
 int topOfStack = 0;
@@ -360,7 +359,9 @@ void search()
 {
 
     int step = 0;
-    while (getch() != 'q')
+    int isStarted = 0;
+    searchMap[carY][carX].direction = carDirection;
+    while (1||getch() != 'q')
     {
         printf("step %d \t  ==========================================\n", step);
 
@@ -394,16 +395,23 @@ void search()
             }
             else
             {
+                // check is start search
+                if (carX == startX && carY == startY && searchMap[carY][carX].carWentedDirection == -1)
+                {
+                    isStarted = 1;
+                }
                 if (searchMap[carY][carX].carWentedDirection - 1 != 0)
                     turn(searchMap[carY][carX].carWentedDirection - 1);
 
                 move();
+
                 if (searchMap[carY][carX].carWentedDirection != -1)
                 {
                     moveBack();
                     turnTo(searchMap[carY][carX].direction);
                     searchMap[carY][carX].carWentedDirection++;
                 }
+
                 searchMap[carY][carX].direction = carDirection;
                 showSearchStep();
                 // showSearchDirectionStep();
@@ -413,7 +421,14 @@ void search()
         }
         else
         {
+            if (carX == startX && carY == startY  )
+            {
+                isStarted = 0;
+                break;
+            }
+            
             moveBack();
+            
             turnTo(searchMap[carY][carX].direction);
             showSearchStep();
             // showSearchDirectionStep();
@@ -448,7 +463,7 @@ int main()
     loadMap();
     carX = startX;
     carY = startY;
-    carDirection = 0;
+    carDirection = startDirection;
     search();
     // findShortestPath();
 
