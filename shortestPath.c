@@ -4,7 +4,7 @@
 int map[SIZE][SIZE];
 typedef struct _Block
 {
-    int type;
+    int _type;
     int direction;
     int fromX, fromY;
     int isNewEdge;
@@ -58,7 +58,7 @@ void initSearchMap()
         {
             searchMap[i][j].direction = -1;
             searchMap[i][j].carWentedDirection = -1;
-            searchMap[i][j].type = 0;
+            searchMap[i][j]._type = 0;
         }
     }
 }
@@ -177,7 +177,7 @@ void flood()
             if (pathMap[y][x].isNewEdge && !pathMap[y][x].isTraveled)
             {
 
-                if (!(map[y][x] & 0b0010) && !pathMap[y - 1][x].isUpdating && !pathMap[y - 1][x].isTraveled)
+                if (!(searchMap[y][x]._type & 0b0010) && !pathMap[y - 1][x].isUpdating && !pathMap[y - 1][x].isTraveled)
                 {
                     pathMap[y - 1][x].isNewEdge = 1;
                     pathMap[y - 1][x].fromX = x;
@@ -185,8 +185,9 @@ void flood()
                     pathMap[y - 1][x].isUpdating = 1;
                     pathMap[y - 1][x].direction = 0;
                     pathMap[y][x].isTraveled = 1;
+                    printf("spread from [%d,%d] to [%d,%d]\n", x, y, x, y - 1);
                 }
-                if (!(map[y][x] & 0b0001) && !pathMap[y][x + 1].isUpdating && !pathMap[y][x + 1].isTraveled)
+                if (!(searchMap[y][x]._type & 0b0001) && !pathMap[y][x + 1].isUpdating && !pathMap[y][x + 1].isTraveled)
                 {
                     pathMap[y][x + 1].isNewEdge = 1;
                     pathMap[y][x + 1].fromX = x;
@@ -194,8 +195,9 @@ void flood()
                     pathMap[y][x + 1].isUpdating = 1;
                     pathMap[y][x + 1].direction = 1;
                     pathMap[y][x].isTraveled = 1;
+                    printf("spread from [%d,%d] to [%d,%d]\n", x, y, x + 1, y);
                 }
-                if (!(map[y][x] & 0b1000) && !pathMap[y + 1][x].isUpdating && !pathMap[y + 1][x].isTraveled)
+                if (!(searchMap[y][x]._type & 0b1000) && !pathMap[y + 1][x].isUpdating && !pathMap[y + 1][x].isTraveled)
                 {
                     pathMap[y + 1][x].isNewEdge = 1;
                     pathMap[y + 1][x].fromX = x;
@@ -203,8 +205,9 @@ void flood()
                     pathMap[y + 1][x].isUpdating = 1;
                     pathMap[y + 1][x].direction = 2;
                     pathMap[y][x].isTraveled = 1;
+                    printf("spread from [%d,%d] to [%d,%d]\n", x, y, x, y + 1);
                 }
-                if (!(map[y][x] & 0b0100) && !pathMap[y][x - 1].isUpdating && !pathMap[y][x - 1].isTraveled)
+                if (!(searchMap[y][x]._type & 0b0100) && !pathMap[y][x - 1].isUpdating && !pathMap[y][x - 1].isTraveled)
                 {
                     pathMap[y][x - 1].isNewEdge = 1;
                     pathMap[y][x - 1].fromX = x;
@@ -212,6 +215,7 @@ void flood()
                     pathMap[y][x - 1].isUpdating = 1;
                     pathMap[y][x - 1].direction = 3;
                     pathMap[y][x].isTraveled = 1;
+                    printf("spread from [%d,%d] to [%d,%d]\n", x, y, x - 1, y);
                 }
             }
         }
@@ -225,7 +229,7 @@ void flood()
     }
 }
 int carX, carY, carDirection;
-int startX = 0, startY = 0,startDirection = 1;
+int startX = 2, startY = 8, startDirection = 0;
 int endX = 4, endY = 4;
 int wayStack[81];
 int topOfStack = 0;
@@ -361,7 +365,7 @@ void search()
     int step = 0;
     int isStarted = 0;
     searchMap[carY][carX].direction = carDirection;
-    while (1||getch() != 'q')
+    while (1 || getch() != 'q')
     {
         printf("step %d \t  ==========================================\n", step);
 
@@ -387,7 +391,7 @@ void search()
                     wall = 0b0100;
                     break;
                 }
-                searchMap[carY][carX].type |= wall;
+                searchMap[carY][carX]._type |= wall;
                 // printf("check %d not move\n", searchMap[carY][carX].carWentedDirection);
                 showSearchStep();
                 // showSearchDirectionStep();
@@ -421,14 +425,14 @@ void search()
         }
         else
         {
-            if (carX == startX && carY == startY  )
+            if (carX == startX && carY == startY)
             {
                 isStarted = 0;
                 break;
             }
-            
+
             moveBack();
-            
+
             turnTo(searchMap[carY][carX].direction);
             showSearchStep();
             // showSearchDirectionStep();
@@ -465,7 +469,7 @@ int main()
     carY = startY;
     carDirection = startDirection;
     search();
-    // findShortestPath();
+    findShortestPath();
 
     return 1;
 }
