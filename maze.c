@@ -21,9 +21,9 @@ int defaultGyro = 0;
 float KpGyro = 1.82;
 float KiGyro = 0.039; // sum error
 float KdGyro = 2.75;  // recent - last error
-float KpUltra = 0.2;
+float KpUltra = 0.21;
 float KiUltra = 0.00000;
-float outlierGap = 20.5;
+float outlierGap = 25.5;
 float expectedGap = 6.5;
 float gapErrorLeft, gapErrorRight, sumGapErrorLeft, sumGapErrorRight, lastGapError = 0;
 float gapLeft, gapRight;
@@ -40,6 +40,7 @@ int wayStack[81];
 int topOfStack = 0;
 
 void moveWithUltra();
+void moveBackWithUltra();
 void moveNormal();
 void moveBackNormal();
 void turnleftWithGyro();
@@ -243,7 +244,7 @@ void moveForward()
         carX--;
         break;
     }
-    moveNormal();
+    moveWithUltra();
 }
 
 void moveBack()
@@ -263,7 +264,7 @@ void moveBack()
         carX++;
         break;
     }
-    moveBackNormal();
+    moveBackWithUltra();
 }
 void turn(int to)
 {
@@ -574,7 +575,7 @@ void turnRightWithGyro()
 int trackingMode = 0; //mode:1 = left; mode:0 = right;
 void moveWithUltra()
 {
-    int length = 400;
+    int length = 600;
     resetMotorEncoder(leftMotor);
     resetMotorEncoder(rightMotor);
     distance = (getMotorEncoder(leftMotor) + getMotorEncoder(rightMotor)) / 2;
@@ -622,7 +623,56 @@ void moveWithUltra()
     motor[rightMotor] = 0;
     resetGyro(gyroSensor);
 }
+void moveBackWithUltra()
+{
+    int length = -600;
+    resetMotorEncoder(leftMotor);
+    resetMotorEncoder(rightMotor);
+    distance = (getMotorEncoder(leftMotor) + getMotorEncoder(rightMotor)) / 2;
 
+    int countFindWall = 0;
+    sumGapErrorleft = 0;
+    sumGapErrorRight = 0;
+    while (distance >= length)
+    {
+
+        gapLeft = SensorValue[leftUlt];
+        gapRight = SensorValue[rightUlt];
+
+        if (gapLeft < outlierGap && gapRight < outlierGap)
+        {
+            gapErrorLeft = expectedGap - SensorValue[leftUlt];
+            gapErrorRight = SensorValue[rightUlt] - expectedGap;
+        }
+        else if (gapLeft < outlierGap)
+        {
+            gapErrorLeft = expectedGap - SensorValue[leftUlt];
+            gapErrorRight = gapErrorLeft;
+        }
+        else if (gapRight < outlierGap)
+        {
+            gapErrorRight = SensorValue[rightUlt] - expectedGap;
+            gapErrorLeft = gapErrorRight;
+        }
+        else
+        {
+            gapErrorLeft = 0;
+            gapErrorRight = 0;
+        }
+
+        distance = (getMotorEncoder(leftMotor) + getMotorEncoder(rightMotor)) / 2;
+        sumGapErrorLeft += gapErrorLeft;
+        sumGapErrorRight += gapErrorRight;
+
+        motor[leftMotor] = -(basePower + KpUltra * ((gapErrorLeft + gapErrorRight) / 2) + KiUltra * ((sumGapErrorLeft + sumGapErrorRight) / 2));
+        motor[rightMotor] = -(basePower - KpUltra * ((gapErrorLeft + gapErrorRight) / 2) - KiUltra * ((sumGapErrorLeft + sumGapErrorRight) / 2));
+
+        wait1Msec(10);
+    }
+    motor[leftMotor] = 0;
+    motor[rightMotor] = 0;
+    resetGyro(gyroSensor);
+}
 void moveNormal()
 {
     int length = 600;
