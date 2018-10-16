@@ -35,7 +35,7 @@ int forwardB = 0;
 int carX, carY, carDirection = 0;
 int startX = 8, startY = 8, startDirection = 0;
 
-int endX = 6, endY = 6;
+int endX = 4, endY = 4;
 int wayStack[81];
 int topOfStack = 0;
 
