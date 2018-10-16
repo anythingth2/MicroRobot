@@ -376,7 +376,7 @@ void search()
     int step = 0;
     int isStarted = 0;
     searchMap[carY][carX].direction = carDirection;
-    while (1||getch() != 'q')
+    while (1 || getch() != 'q')
     {
         printf("step %d* \t  ==========================================\n", step);
 
@@ -387,7 +387,7 @@ void search()
             if (checkWall(carX, carY, carDirection, searchMap[carY][carX].carWentedDirection - 1))
             {
                 int wall;
-                switch ((carDirection + (searchMap[carY][carX].carWentedDirection -1)) &0b11)
+                switch ((carDirection + (searchMap[carY][carX].carWentedDirection - 1)) & 0b11)
                 {
                 case 0:
                     wall = 0b0010;
@@ -485,6 +485,6 @@ int main()
     carDirection = startDirection;
     search();
     findShortestPath();
-
+    goShortestPath();
     return 1;
 }

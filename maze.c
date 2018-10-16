@@ -35,7 +35,7 @@ int forwardB = 0;
 int carX, carY, carDirection = 0;
 int startX = 8, startY = 8, startDirection = 0;
 
-int endX = 4, endY = 4;
+int endX = 6, endY = 6;
 int wayStack[81];
 int topOfStack = 0;
 
@@ -103,6 +103,7 @@ void initSearchMap()
             searchMap[i][j]._type = 0;
         }
     }
+    searchMap[startY][startX]._type |= 0b1000;
 }
 
 char getDirectionSymbol(int direction)
@@ -183,11 +184,11 @@ void showSearchStep()
         {
             if (searchMap[i][j].carWentedDirection != -1)
             {
-                displayStringAt(i * CHAR_WIDTH, LCD_HEIGHT - (SIZE - j) * CHAR_HEIGHT, " %d", searchMap[i][j].carWentedDirection);
+                displayStringAt(j * CHAR_WIDTH, LCD_HEIGHT - (SIZE - i) * CHAR_HEIGHT, " %d", searchMap[i][j].carWentedDirection);
             }
             else
             {
-                displayStringAt(i * CHAR_WIDTH, LCD_HEIGHT - (SIZE - j) * CHAR_HEIGHT, "%d", -1);
+                displayStringAt(j * CHAR_WIDTH, LCD_HEIGHT - (SIZE - i) * CHAR_HEIGHT, "%d", -1);
             }
         }
     }
@@ -200,7 +201,7 @@ void showSearchDirectionStep()
     {
         for (int j = 0; j < SIZE; j++)
         {
-            displayStringAt(i * CHAR_WIDTH, LCD_HEIGHT - j * CHAR_HEIGHT, "%c", getDirectionSymbol(searchMap[i][j].direction));
+            displayStringAt(j * CHAR_WIDTH, LCD_HEIGHT - i * CHAR_HEIGHT, "%c", getDirectionSymbol(searchMap[i][j].direction));
         }
         // printf("\n");
     }
@@ -215,7 +216,7 @@ void showSearchCar()
         {
             if (i == carY && j == carX)
             {
-                displayStringAt(i * CHAR_WIDTH, LCD_HEIGHT - j * CHAR_HEIGHT, "%c", getDirectionSymbol(carDirection));
+                displayStringAt(j * CHAR_WIDTH, LCD_HEIGHT - i * CHAR_HEIGHT, "%c", getDirectionSymbol(carDirection));
             }
             else
             {
@@ -325,6 +326,8 @@ void search()
 {
 
     int step = 0;
+    int isStarted = 0;
+    searchMap[carY][carX].direction = carDirection;
     while (1)
     {
         // printf("step %d \t  ==========================================\n", step);
@@ -361,6 +364,10 @@ void search()
             }
             else
             {
+                if (carX == startX && carY == startY && searchMap[carY][carX].carWentedDirection == -1)
+                {
+                    isStarted = 1;
+                }
                 if (searchMap[carY][carX].carWentedDirection - 1 != 0)
                     turn(searchMap[carY][carX].carWentedDirection - 1);
 
@@ -382,6 +389,11 @@ void search()
         }
         else
         {
+            if (carX == startX && carY == startY)
+            {
+                isStarted = 0;
+                break;
+            }
             moveBack();
             turnTo(searchMap[carY][carX].direction);
             eraseDisplay();
@@ -458,12 +470,15 @@ void flood()
 void makeWay()
 {
     int x = endX, y = endY;
+    eraseDisplay();
+    int i = 0;
     while (1)
     {
         pushWayStack(pathMap[y][x].direction);
         int nextX = pathMap[y][x].fromX;
         int nextY = pathMap[y][x].fromY;
         //printf("%c", getDirectionSymbol(pathMap[y][x].direction));
+        displayStringAt(i++*(CHAR_WIDTH),50,"%c",getDirectionSymbol(pathMap[y][x].direction));
         if (x == startX && y == startY)
         {
             break;
@@ -492,13 +507,18 @@ void findShortestPath()
 
 void goShortestPath()
 {
-    int targetDirection ;
-    for (int i = 0; i < topOfStack; i++)
+    int targetDirection;
+	playSound(soundDownwardTones);
+		popWayStack();
+    while (topOfStack > 0)
     {
         targetDirection = popWayStack();
         turnTo(targetDirection);
         moveForward();
+        eraseDisplay();
+        displayStringAt(0, 50, "passed %d blocks", i + 1);
     }
+    playSound(soundFastUpwardTones);
 }
 // end SHORTEST PATH================================
 
