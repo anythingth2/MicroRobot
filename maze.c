@@ -21,8 +21,8 @@ int defaultGyro = 0;
 float KpGyro = 1.82;
 float KiGyro = 0.039; // sum error
 float KdGyro = 2.75;  // recent - last error
-float KpUltra = 0.15;
-float KiUltra = 0.0005;
+float KpUltra = 0.10;
+float KiUltra = 0.00005;
 float outlierGap = 30.5;
 float expectedGap = 10.0;
 float gap;
@@ -464,17 +464,35 @@ void moveWithUltra()
     int length = 630;
     resetMotorEncoder(leftMotor);
     resetMotorEncoder(rightMotor);
+    resetGyro(gyroSensor);
     distance = (getMotorEncoder(leftMotor) + getMotorEncoder(rightMotor)) / 2;
 
     int countFindWall = 0;
     float sumGapError = 0;
+    float leftGap,frontGap,rightGap;
+    trackingMode = 0;
     while (distance < length)
     {
         // gap = SensorValue[ult];
+    		/*
     		if(trackingMode)
     			gap = SensorValue[leftUlt];
     		else gap = SensorValue[rightUlt];
-        /*
+    		*/
+    		leftGap = SensorValue[leftUlt];
+    		frontGap = SensorValue[frontUlt];
+    		rightGap = SensorValue[rightUlt];
+        if(leftGap < outlierGap || rightGap < outlierGap){
+        		if(leftGap < outlierGap){
+        				gap = leftGap;
+        		}else{
+        				gap = rightGap;
+        		}
+        }else{
+        		motor[leftMotor] = basePower;
+        		motor[rightMotor] = basePower;
+      	}
+    		/*
     		if (gap > outlierGap && countFindWall < 2)
         {
             countFindWall++;
