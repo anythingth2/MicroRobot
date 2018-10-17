@@ -21,10 +21,10 @@ int defaultGyro = 0;
 float KpGyro = 1.82;
 float KiGyro = 0.039; // sum error
 float KdGyro = 2.75;  // recent - last error
-float KpUltra = 0.21;
-float KiUltra = 0.00000;
-float outlierGap = 25.5;
-float expectedGap = 6.5;
+float KpUltra = 0.18;
+float KiUltra = 0.000007;
+float outlierGap = 20;
+float expectedGap = 7;
 float gapErrorLeft, gapErrorRight, sumGapErrorLeft, sumGapErrorRight, lastGapError = 0;
 float gapLeft, gapRight;
 float gap;
@@ -509,15 +509,16 @@ void findShortestPath()
 void goShortestPath()
 {
     int targetDirection;
-	playSound(soundDownwardTones);
+		playSound(soundDownwardTones);
 		popWayStack();
+		int count = 0;
     while (topOfStack > 0)
     {
         targetDirection = popWayStack();
         turnTo(targetDirection);
         moveForward();
         eraseDisplay();
-        displayStringAt(0, 50, "passed %d blocks", i + 1);
+        displayStringAt(0, 50, "passed %d blocks", ++count);
     }
     playSound(soundFastUpwardTones);
 }
@@ -529,7 +530,7 @@ void turnleftWithGyro()
     resetGyro(gyroSensor);
     wait1Msec(500);
     float Kp = 0.75;
-    int expect = -93;
+    int expect = -90;
     int err;
 
     int gyro = getGyroDegrees(gyroSensor);
@@ -537,8 +538,8 @@ void turnleftWithGyro()
     {
         gyro = getGyroDegrees(gyroSensor);
         err = expect - gyro;
-        motor[leftMotor] = (Kp * err);
-        motor[rightMotor] = -(Kp * err);
+        motor[leftMotor] = (Kp * err)/2;
+        motor[rightMotor] = -(Kp * err)/2;
         wait1Msec(10);
     }
     motor[leftMotor] = 0;
@@ -553,7 +554,7 @@ void turnRightWithGyro()
     resetGyro(gyroSensor);
     wait1Msec(500);
     float Kp = 0.75;
-    int expect = 92;
+    int expect = 90;
     int err;
 
     int gyro = getGyroDegrees(gyroSensor);
@@ -561,8 +562,8 @@ void turnRightWithGyro()
     {
         gyro = getGyroDegrees(gyroSensor);
         err = expect - gyro;
-        motor[leftMotor] = (Kp * err);
-        motor[rightMotor] = -(Kp * err);
+        motor[leftMotor] = (Kp * err)/2;
+        motor[rightMotor] = -(Kp * err)/2;
         wait1Msec(10);
     }
     motor[leftMotor] = 0;
@@ -614,10 +615,10 @@ void moveWithUltra()
         sumGapErrorLeft += gapErrorLeft;
         sumGapErrorRight += gapErrorRight;
 
-        motor[leftMotor] = basePower + KpUltra * ((gapErrorLeft + gapErrorRight) / 2) + KiUltra * ((sumGapErrorLeft + sumGapErrorRight) / 2);
-        motor[rightMotor] = basePower - KpUltra * ((gapErrorLeft + gapErrorRight) / 2) - KiUltra * ((sumGapErrorLeft + sumGapErrorRight) / 2);
+        motor[leftMotor] = basePower + KpUltra * ((gapErrorLeft + gapErrorRight) / 2) + KiUltra/10 * ((sumGapErrorLeft + sumGapErrorRight) / 2);
+        motor[rightMotor] = basePower - KpUltra * ((gapErrorLeft + gapErrorRight) / 2) - KiUltra/10 * ((sumGapErrorLeft + sumGapErrorRight) / 2);
 
-        wait1Msec(10);
+        wait1Msec(10*10);
     }
     motor[leftMotor] = 0;
     motor[rightMotor] = 0;
@@ -664,10 +665,10 @@ void moveBackWithUltra()
         sumGapErrorLeft += gapErrorLeft;
         sumGapErrorRight += gapErrorRight;
 
-        motor[leftMotor] = -(basePower + KpUltra * ((gapErrorLeft + gapErrorRight) / 2) + KiUltra * ((sumGapErrorLeft + sumGapErrorRight) / 2));
-        motor[rightMotor] = -(basePower - KpUltra * ((gapErrorLeft + gapErrorRight) / 2) - KiUltra * ((sumGapErrorLeft + sumGapErrorRight) / 2));
+        motor[leftMotor] = -(basePower + KpUltra * ((gapErrorLeft + gapErrorRight) / 2) + KiUltra /10* ((sumGapErrorLeft + sumGapErrorRight) / 2));
+        motor[rightMotor] = -(basePower - KpUltra * ((gapErrorLeft + gapErrorRight) / 2) - KiUltra/10 * ((sumGapErrorLeft + sumGapErrorRight) / 2));
 
-        wait1Msec(10);
+        wait1Msec(10*10);
     }
     motor[leftMotor] = 0;
     motor[rightMotor] = 0;
