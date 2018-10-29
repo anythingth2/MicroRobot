@@ -31,7 +31,7 @@ Car car;
 const int startX = 9, startY = 9, startDirection = NORTH_DIRECION;
 
 float KpColor = 0.05;
-float KiColor = 0.00001;
+float KiColor = 0.000001;
 float err;
 float sumErr;
 int leftCol = 0;
@@ -42,37 +42,46 @@ int frontult = 0;
 int colorOfBox;
 int color = 0;
 int fullBlackThreshold = 10;
-void moveline(int block)
+void moveForward(int block)
 {
    // int i = 1;
 		sumErr = 0;
-    do
-    {
-        leftCol = getColorReflected(leftColor);
-        rightCol = getColorReflected(rightColor);
+		for(int i = 0;i< block;i++){
+	    do
+	    {
+	        leftCol = getColorReflected(leftColor);
+	        if(leftCol>40)
+	        	leftCol = 40;
+	        rightCol = getColorReflected(rightColor);
+					if(rightCol>40)
+						rightCol = 40;
+	        err = leftCol - rightCol;
+					sumErr += err;
 
-        err = leftCol - rightCol;
-				sumErr += err;
+	        motor[leftMotor] = basepower + KpColor*err + KiColor*sumErr;
+	        motor[rightMotor] = basepower - KpColor*err - KiColor*sumErr;
 
-        motor[leftMotor] = basepower + KpColor*err - KiColor*sumErr;
-        motor[rightMotor] = basepower - KpColor*err + KiColor*sumErr;
+	    }while(!(leftCol <= fullBlackThreshold && rightCol <= fullBlackThreshold));
 
-    }while(!(leftCol <= fullBlackThreshold && rightCol <= fullBlackThreshold));
-
-    while(leftCol <= fullBlackThreshold && rightCol <= fullBlackThreshold){
-        leftCol = getColorReflected(leftColor);
-        rightCol = getColorReflected(rightColor);
-    }
+	    while(leftCol <= fullBlackThreshold && rightCol <= fullBlackThreshold){
+	        leftCol = getColorReflected(leftColor);
+	        rightCol = getColorReflected(rightColor);
+	    }
+  }
 }
-void turnLeft()
-{
-    motor[rightMotor] = 90;
-    motor[leftMotor] = -90;
-}
-void turnRight()
-{
-    motor[rightMotor] = -90;
-    motor[leftMotor] = 90;
+void turn(int to){
+	if(to == RIGHT_HAND){
+		moveMotorTarget(leftMotor,180,basepower);
+		moveMotorTarget(rightMotor,180,-basepower);
+
+	}else{
+		moveMotorTarget(leftMotor,180,-basepower);
+		moveMotorTarget(rightMotor,180,basepower);
+
+	}
+		waitUntilMotorStop(leftMotor);
+		waitUntilMotorStop(rightMotor);
+
 }
 void pickUp()
 {
@@ -135,8 +144,8 @@ void initCar()
 
 task main()
 {
-    while (1)
-    {
-        moveline(10);
-    }
+	for(int i=0;i<9;i++){
+		moveForward(9-1);
+		turn(LEFT_HAND);
+	}
 }
