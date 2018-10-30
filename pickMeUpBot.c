@@ -31,8 +31,8 @@ typedef struct _Car
 Car car;
 const int startX = 9, startY = 9, startDirection = NORTH_DIRECION;
 
-float KpColor = 0.035;
-float KiColor = 0.0000007;
+float KpColor = 0.1;
+float KiColor = 0.000003;
 float err;
 float sumErr;
 int leftCol = 0;
@@ -47,16 +47,18 @@ int fullBlackThreshold = 10;
 void turn(int to)
 {
     car.direction = (car.direction + to) & 0b11;
-
+    motor[leftMotor] = 20;
+    motor[rightMotor] = 20;
+    wait1Msec(100);
     if (to == RIGHT_HAND)
     {
-        moveMotorTarget(leftMotor, 180, basepower / 2);
-        moveMotorTarget(rightMotor, 180, -basepower / 2);
+        moveMotorTarget(leftMotor, 180, basepower / 4);
+        moveMotorTarget(rightMotor, 180, -basepower / 4);
     }
     else
     {
-        moveMotorTarget(leftMotor, 180, -basepower / 2);
-        moveMotorTarget(rightMotor, 180, basepower / 2);
+        moveMotorTarget(leftMotor, 180, -basepower / 4);
+        moveMotorTarget(rightMotor, 180, basepower / 4);
     }
     waitUntilMotorStop(leftMotor);
     waitUntilMotorStop(rightMotor);
@@ -133,8 +135,8 @@ int readBlockType()
 
 void printMap()
 {
-    int offsetY = 0;
-    int offsetX = 0;
+    int offsetY = 10;
+    int offsetX = 15;
     for (int i = 0; i < 9; i++)
     {
         for (int j = 0; j < 9; j++)
@@ -158,7 +160,7 @@ void search()
             //     i = 5;
             //     break;
             // }
-            eraseDisplay();
+            //eraseDisplay();
             moveForward(1);
 
             turn(LEFT_HAND);
@@ -185,23 +187,31 @@ void search()
                 }
                 // printf("found block at %d\n", foundBlockAt);
                 // getch();
-                displayStringAt(0, 115 - 80, "foundBlockAt : %d", foundBlockAt);
+               // displayStringAt(0, 115 - 80, "foundBlockAt : %d", foundBlockAt);
                 moveForward(foundBlockAt);
                 map[car.y + verticalOffset][car.x + horizontalOffset] = readBlockType();
                 // printMap();
                 // getch();
-                moveBack(foundBlockAt);
-                printMap();
-            }
+                //moveBack(foundBlockAt);
 
-            turn(RIGHT_HAND);
+                turn(RIGHT_HAND);
+                turn(RIGHT_HAND);
+                moveForward(foundBlockAt);
+                turn(LEFT_HAND);
+                //printMap();
+            }else{
+
+            	turn(RIGHT_HAND);
+          	}
             // printSimMap();
+          	eraseDisplay();
             printMap();
             // printf("-------------------------------------------------------\n");
         }
         turn(LEFT_HAND);
 
         // printSimMap();
+        eraseDisplay();
         printMap();
         // printf("-------------------------------------------------------\n");
     }
