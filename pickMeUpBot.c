@@ -20,6 +20,7 @@ const char SYMBOL_TYPE[] = {'-', '+', 'O', 'B'};
 #define WEST_DIRECION 3
 #define LEFT_HAND -1
 #define RIGHT_HAND 1
+#define BLOCK_SIZE 26.7
 const char SYMBOL_DIRECTION[] = {'^', '>', 'v', '<'};
 
 typedef struct _Car
@@ -30,8 +31,8 @@ typedef struct _Car
 Car car;
 const int startX = 9, startY = 9, startDirection = NORTH_DIRECION;
 
-float KpColor = 0.05;
-float KiColor = 0.000001;
+float KpColor = 0.035;
+float KiColor = 0.0000007;
 float err;
 float sumErr;
 int leftCol = 0;
@@ -42,47 +43,170 @@ int frontult = 0;
 int colorOfBox;
 int color = 0;
 int fullBlackThreshold = 10;
+
+void turn(int to)
+{
+    car.direction = (car.direction + to) & 0b11;
+
+    if (to == RIGHT_HAND)
+    {
+        moveMotorTarget(leftMotor, 180, basepower / 2);
+        moveMotorTarget(rightMotor, 180, -basepower / 2);
+    }
+    else
+    {
+        moveMotorTarget(leftMotor, 180, -basepower / 2);
+        moveMotorTarget(rightMotor, 180, basepower / 2);
+    }
+    waitUntilMotorStop(leftMotor);
+    waitUntilMotorStop(rightMotor);
+}
 void moveForward(int block)
 {
-   // int i = 1;
-		sumErr = 0;
-		for(int i = 0;i< block;i++){
-	    do
-	    {
-	        leftCol = getColorReflected(leftColor);
-	        if(leftCol>40)
-	        	leftCol = 40;
-	        rightCol = getColorReflected(rightColor);
-					if(rightCol>40)
-						rightCol = 40;
-	        err = leftCol - rightCol;
-					sumErr += err;
+    // int i = 1;
+    sumErr = 0;
+    for (int i = 0; i < block; i++)
+    {
+        do
+        {
+            leftCol = getColorReflected(leftColor);
+            if (leftCol > 40)
+                leftCol = 40;
+            rightCol = getColorReflected(rightColor);
+            if (rightCol > 40)
+                rightCol = 40;
+            err = leftCol - rightCol;
+            sumErr += err;
 
-	        motor[leftMotor] = basepower + KpColor*err + KiColor*sumErr;
-	        motor[rightMotor] = basepower - KpColor*err - KiColor*sumErr;
+            motor[leftMotor] = basepower + KpColor * err + KiColor * sumErr;
+            motor[rightMotor] = basepower - KpColor * err - KiColor * sumErr;
+            wait1Msec(10);
+        } while (!(leftCol <= fullBlackThreshold && rightCol <= fullBlackThreshold));
 
-	    }while(!(leftCol <= fullBlackThreshold && rightCol <= fullBlackThreshold));
-
-	    while(leftCol <= fullBlackThreshold && rightCol <= fullBlackThreshold){
-	        leftCol = getColorReflected(leftColor);
-	        rightCol = getColorReflected(rightColor);
-	    }
-  }
+        while (leftCol <= fullBlackThreshold && rightCol <= fullBlackThreshold)
+        {
+            leftCol = getColorReflected(leftColor);
+            rightCol = getColorReflected(rightColor);
+        }
+    }
 }
-void turn(int to){
-	if(to == RIGHT_HAND){
-		moveMotorTarget(leftMotor,180,basepower);
-		moveMotorTarget(rightMotor,180,-basepower);
 
-	}else{
-		moveMotorTarget(leftMotor,180,-basepower);
-		moveMotorTarget(rightMotor,180,basepower);
-
-	}
-		waitUntilMotorStop(leftMotor);
-		waitUntilMotorStop(rightMotor);
-
+void moveBack(int block)
+{
+    if (block <= 0)
+        return;
+    turn(LEFT_HAND);
+    turn(LEFT_HAND);
+    moveForward(block);
+    turn(RIGHT_HAND);
+    turn(RIGHT_HAND);
 }
+
+void turnTo(int direction)
+{
+    while (car.direction != direction)
+    {
+        if (car.direction == 0b00 && direction == 0b11)
+        {
+            turn(RIGHT_HAND);
+            continue;
+        }
+        if (car.direction == 0b11 && direction == 0b00)
+        {
+            turn(RIGHT_HAND);
+            continue;
+        }
+        if (car.direction < direction)
+            turn(RIGHT_HAND);
+        else
+            turn(LEFT_HAND);
+    }
+}
+int scanLineBlock()
+{
+    return SensorValue[ultSensor] < BLOCK_SIZE * 5 + 7 ? (int)((SensorValue[ultSensor] - 7) / BLOCK_SIZE) : -1;
+}
+int readBlockType()
+{
+    return ORANGE_TYPE;
+}
+
+void printMap()
+{
+    int offsetY = 0;
+    int offsetX = 0;
+    for (int i = 0; i < 9; i++)
+    {
+        for (int j = 0; j < 9; j++)
+        {
+            if (i == car.y && j == car.x)
+                displayStringAt(10 + offsetX * j, 115 - offsetY * i, "%c", SYMBOL_DIRECTION[car.direction]);
+            else
+                displayStringAt(10 + offsetX * j, 115 - offsetY * i, "%c", SYMBOL_TYPE[map[i][j]]);
+        }
+    }
+}
+void search()
+{
+    for (int i = 0; i < 4; i++)
+    {
+
+        for (int j = 0; j < SIZE - 1; j++)
+        {
+            // if (getch() == 'q')
+            // {
+            //     i = 5;
+            //     break;
+            // }
+            eraseDisplay();
+            moveForward(1);
+
+            turn(LEFT_HAND);
+
+            int foundBlockAt = scanLineBlock();
+            if (foundBlockAt != -1)
+            {
+                int horizontalOffset = 0;
+                int verticalOffset = 0;
+                switch (car.direction)
+                {
+                case NORTH_DIRECION:
+                    verticalOffset = -1;
+                    break;
+                case EAST_DIRECION:
+                    horizontalOffset = 1;
+                    break;
+                case SOUTH_DIRECION:
+                    verticalOffset = 1;
+                    break;
+                case WEST_DIRECION:
+                    horizontalOffset = -1;
+                    break;
+                }
+                // printf("found block at %d\n", foundBlockAt);
+                // getch();
+                displayStringAt(0, 115 - 80, "foundBlockAt : %d", foundBlockAt);
+                moveForward(foundBlockAt);
+                map[car.y + verticalOffset][car.x + horizontalOffset] = readBlockType();
+                // printMap();
+                // getch();
+                moveBack(foundBlockAt);
+                printMap();
+            }
+
+            turn(RIGHT_HAND);
+            // printSimMap();
+            printMap();
+            // printf("-------------------------------------------------------\n");
+        }
+        turn(LEFT_HAND);
+
+        // printSimMap();
+        printMap();
+        // printf("-------------------------------------------------------\n");
+    }
+}
+
 void pickUp()
 {
     moveMotorTarget(motorC, 650, 80);
@@ -95,12 +219,12 @@ void Drop()
 }
 void getColor() // color = 1 is black - color = 2 is orange
 {
-    colorOfBox = getColorReflected(leftColor);
-    if (colorOfBox <= 20)
+    colorOfBox = SensorValue[S3];
+    if (colorOfBox >= 15 && colorOfBox <= 30)
     {
         color = 1; // black
     }
-    else if (colorOfBox >= 30)
+    else if (colorOfBox >= 45 && colorOfBox <= 50)
     {
         color = 2; //orange
     }
@@ -113,7 +237,6 @@ void isFound()
         getColor();
     }
 }
-
 
 void initMap()
 {
@@ -141,11 +264,10 @@ void initCar()
     car.direction = startDirection;
 }
 
-
 task main()
 {
-	for(int i=0;i<9;i++){
-		moveForward(9-1);
-		turn(LEFT_HAND);
-	}
+
+    initMap();
+    initCar();
+    search();
 }
