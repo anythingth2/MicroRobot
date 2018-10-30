@@ -32,6 +32,12 @@ typedef struct _Box
     int type;
 } Box;
 Box blackBox[4], orangeBox[2], doubleOrangeBox;
+Box destinationBox[2], destinationDoubleBox;
+
+int _abs(int v)
+{
+    return v > 0 ? v : -v;
+}
 void initMap()
 {
     for (int i = 0; i < SIZE; i++)
@@ -49,6 +55,16 @@ void initMap()
     simMap[4][6] = BLACK_TYPE;
     simMap[7][5] = BLACK_TYPE;
     simMap[2][5] = BLACK_TYPE;
+
+    destinationBox[0].x = 7;
+    destinationBox[0].y = 1;
+
+    destinationBox[1].x = 2;
+    destinationBox[1].y = 7;
+
+    destinationDoubleBox.x = 6;
+    destinationDoubleBox.y = 5;
+    destinationDoubleBox.type = DOUBLE_ORANGE_VERTICAL_TYPE;
 }
 
 void initCar()
@@ -84,6 +100,29 @@ void printMap()
         printf("\n");
     }
     printf("\n");
+}
+
+Box getNextBox(int direction)
+{
+    Box box;
+    box.x = car.x;
+    box.y = car.y;
+    switch (direction)
+    {
+    case NORTH_DIRECION:
+        box.y--;
+        break;
+    case EAST_DIRECION:
+        box.x++;
+        break;
+    case SOUTH_DIRECION:
+        box.y++;
+        break;
+    case WEST_DIRECION:
+        box.x--;
+        break;
+    }
+    return box;
 }
 void moveForward(int block)
 {
@@ -157,7 +196,10 @@ void turnTo(int direction)
             turn(LEFT_HAND);
     }
 }
-
+float calculateDistance(Box fromBox, Box toBox)
+{
+    return (fromBox.x - toBox.x) * (fromBox.x - toBox.x) + (fromBox.y - toBox.y) * (fromBox.y - fromBox.y);
+}
 int scanLineBlock()
 {
     int found = -1;
@@ -248,27 +290,27 @@ void search()
                     horizontalOffset = -1;
                     break;
                 }
-                printf("found block at %d\n", foundBlockAt);
+                // printf("found block at %d\n", foundBlockAt);
                 // getch();
 
                 moveForward(foundBlockAt - 1);
                 map[car.y + verticalOffset][car.x + horizontalOffset] = readBlockType();
-                printMap();
+                // printMap();
                 // getch();
                 moveBack(foundBlockAt - 1);
-                printMap();
+                // printMap();
             }
 
             turn(RIGHT_HAND);
-            printSimMap();
-            printMap();
-            printf("-------------------------------------------------------\n");
+            // printSimMap();
+            // printMap();
+            // printf("-------------------------------------------------------\n");
         }
         turn(LEFT_HAND);
 
-        printSimMap();
-        printMap();
-        printf("-------------------------------------------------------\n");
+        // printSimMap();
+        // printMap();
+        // printf("-------------------------------------------------------\n");
     }
 }
 void findBlock()
@@ -289,7 +331,7 @@ void findBlock()
             {
                 blackBox[countBlackBox].x = x;
                 blackBox[countBlackBox++].y = y;
-                printf("blackBox %d %d\n", x, y);
+                // printf("blackBox %d %d\n", x, y);
             }
             else if (testMap[y][x] == ORANGE_TYPE)
             {
@@ -298,37 +340,130 @@ void findBlock()
                 {
                     if (testMap[y][x + 1] == ORANGE_TYPE)
                     {
-                        testMap[y][x+1] = NOT_REACH_TYPE;
+                        testMap[y][x + 1] = NOT_REACH_TYPE;
                         doubleOrangeBox.x = x;
                         doubleOrangeBox.y = y;
                         doubleOrangeBox.type = DOUBLE_ORANGE_HORIZONTAL_TYPE;
-                        printf("double horizontal %d %d\n", x, y);
-                        
+                        // printf("double horizontal %d %d\n", x, y);
                         continue;
                     }
                     else if (testMap[y + 1][x] == ORANGE_TYPE)
                     {
-                        testMap[y+1][x] = NOT_REACH_TYPE;
+                        testMap[y + 1][x] = NOT_REACH_TYPE;
                         doubleOrangeBox.x = x;
                         doubleOrangeBox.y = y;
                         doubleOrangeBox.type = DOUBLE_ORANGE_VERTICAL_TYPE;
-                        printf("double vertical %d %d\n", x, y);
+                        // printf("double vertical %d %d\n", x, y);
                         continue;
                     }
                 }
 
                 orangeBox[countOrangeBox].x = x;
                 orangeBox[countOrangeBox++].y = y;
-                printf("orangeBox %d %d\n", x, y);
+                // printf("orangeBox %d %d\n", x, y);
             }
         }
     }
 }
+
+void moveJook(Box box)
+{
+    while (car.x != box.x || car.y != box.y)
+    {
+        if (getch() == 'q')
+            return;
+        Box nextBlock = getNextBox(car.direction);
+        if (map[nextBlock.y][nextBlock.x] == NOT_REACH_TYPE)
+        {
+            moveForward(1);
+        }
+        else
+        {
+            int isHorizontal = car.direction == WEST_DIRECION || car.direction == EAST_DIRECION;
+            int isStart = 0;
+            int savedX = car.x, savedY = car.y;
+            turn(RIGHT_HAND);
+            while (1)
+            {
+                if (getch() == 'q')
+                    return;
+                if (isStart)
+                {
+                    // printf("[%d %d] [%d %d]\n", car.x, car.y, savedX, savedY);
+                    if (isHorizontal)
+                    {
+                        if (car.y == savedY)
+                            break;
+                    }
+                    else
+                    {
+                        if (car.x == savedX)
+                            break;
+                    }
+                }
+                if (!isStart)
+                    isStart = 1;
+
+                Box leftBox = getNextBox((car.direction - 1) & 0b11);
+                Box frontBox = getNextBox(car.direction);
+                Box rightBox = getNextBox((car.direction + 1) & 0b11);
+
+                if (map[leftBox.y][leftBox.x] == NOT_REACH_TYPE)
+                {
+                    turn(LEFT_HAND);
+                    moveForward(1);
+                    printMap();
+                    continue;
+                }
+                if (map[frontBox.y][frontBox.x] == NOT_REACH_TYPE)
+                {
+
+                    moveForward(1);
+                    printMap();
+
+                    continue;
+                }
+                if (map[rightBox.y][rightBox.x] == NOT_REACH_TYPE)
+                {
+                    turn(RIGHT_HAND);
+                    moveForward(1);
+                    printMap();
+                    continue;
+                }
+            }
+            turn(RIGHT_HAND);
+        }
+        printMap();
+    }
+}
+void goPushBox()
+{
+
+    if (calculateDistance(orangeBox[0], destinationBox[0]) < calculateDistance(orangeBox[1], destinationBox[0]))
+    {
+        int pair[][2] = {{0, 0}, {1, 1}};
+    }
+    else
+    {
+        int pair[][2] = {{0, 1}, {1, 0}};
+    }
+
+    for (int i = 0; i < 2; i++)
+    {
+    }
+}
+
 int main()
 {
     initMap();
     initCar();
     printSimMap();
     search();
-    findBlock();
+    // findBlock();
+    moveForward(4);
+    turn(LEFT_HAND);
+    Box box;
+    box.x = 2;
+    box.y = 5;
+    moveJook(box);
 }
