@@ -31,8 +31,9 @@ typedef struct _Car
 Car car;
 const int startX = 9, startY = 9, startDirection = NORTH_DIRECION;
 
-float KpColor = 0.1;
-float KiColor = 0.000003;
+float KpColor = 0.09;
+float KiColor = 0.0;
+//float KiColor = -0.00000001;
 float err;
 float sumErr;
 int leftCol = 0;
@@ -47,8 +48,8 @@ int fullBlackThreshold = 10;
 void turn(int to)
 {
     car.direction = (car.direction + to) & 0b11;
-    motor[leftMotor] = 20;
-    motor[rightMotor] = 20;
+    motor[leftMotor] = 15;
+    motor[rightMotor] = 15;
     wait1Msec(100);
     if (to == RIGHT_HAND)
     {
@@ -57,15 +58,15 @@ void turn(int to)
     }
     else
     {
-        moveMotorTarget(leftMotor, 180, -basepower / 4);
-        moveMotorTarget(rightMotor, 180, basepower / 4);
+        moveMotorTarget(leftMotor, 179, -basepower / 4);
+        moveMotorTarget(rightMotor, 179, basepower / 4);
     }
     waitUntilMotorStop(leftMotor);
     waitUntilMotorStop(rightMotor);
 }
 void moveForward(int block)
 {
-    // int i = 1;
+
     sumErr = 0;
     for (int i = 0; i < block; i++)
     {
@@ -279,5 +280,7 @@ task main()
 
     initMap();
     initCar();
-    search();
+    while(1){
+    	moveForward(10);
+  	}
 }

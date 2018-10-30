@@ -258,14 +258,8 @@ void search()
 {
     for (int i = 0; i < 4; i++)
     {
-
         for (int j = 0; j < SIZE - 1; j++)
         {
-            // if (getch() == 'q')
-            // {
-            //     i = 5;
-            //     break;
-            // }
             moveForward(1);
 
             turn(LEFT_HAND);
@@ -420,7 +414,6 @@ void moveJook(Box box)
 
                     moveForward(1);
                     printMap();
-
                     continue;
                 }
                 if (map[rightBox.y][rightBox.x] == NOT_REACH_TYPE)
@@ -436,6 +429,34 @@ void moveJook(Box box)
         printMap();
     }
 }
+int isClearPath(int x, int y, int direction)
+{
+    int isClear = 1;
+    while (x >= 0 && x < SIZE && y >= 0 && y < SIZE)
+    {
+        switch (direction)
+        {
+        case NORTH_DIRECION:
+            y--;
+            break;
+        case EAST_DIRECION:
+            x++;
+            break;
+        case SOUTH_DIRECION:
+            y++;
+            break;
+        case WEST_DIRECION:
+            x--;
+            break;
+        }
+        if (map[y][x] != NOT_REACH_TYPE)
+        {
+            isClear = 0;
+            break;
+        }
+    }
+    return isClear;
+}
 void goPushBox()
 {
 
@@ -450,6 +471,11 @@ void goPushBox()
 
     for (int i = 0; i < 2; i++)
     {
+        //move block to border
+
+        for (int j = 0; j < SIZE; j++)
+        {
+        }
     }
 }
 
@@ -459,11 +485,5 @@ int main()
     initCar();
     printSimMap();
     search();
-    // findBlock();
-    moveForward(4);
-    turn(LEFT_HAND);
-    Box box;
-    box.x = 2;
-    box.y = 5;
-    moveJook(box);
+    findBlock();
 }
