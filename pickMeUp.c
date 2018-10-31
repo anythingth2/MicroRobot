@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <conio.h>
-#define SIZE 10
+#define SIZE 12
 int simMap[SIZE][SIZE];
 int map[SIZE][SIZE];
 #define NOT_REACH_TYPE 0
@@ -22,16 +22,18 @@ typedef struct _Car
 {
     int x, y;
     int direction;
+    int isPicking;
+    int orangePickingIndex;
 } Car;
 Car car;
-const int startX = 9, startY = 9, startDirection = NORTH_DIRECION;
+const int startX = 10, startY = 10, startDirection = NORTH_DIRECION;
 
 typedef struct _Box
 {
     int x, y;
     int type;
 } Box;
-Box blackBox[4], orangeBox[2], doubleOrangeBox;
+Box blackBoxs[4], orangeBoxs[2], doubleOrangeBox;
 Box destinationBox[2], destinationDoubleBox;
 
 int _abs(int v)
@@ -46,24 +48,24 @@ void initMap()
             simMap[i][j] = NOT_REACH_TYPE;
             map[i][j] = NOT_REACH_TYPE;
         }
-    simMap[3][3] = ORANGE_TYPE;
-    simMap[5][7] = ORANGE_TYPE;
-    simMap[5][8] = ORANGE_TYPE;
-    simMap[7][3] = ORANGE_TYPE;
+    simMap[4][4] = ORANGE_TYPE;
+    simMap[6][8] = ORANGE_TYPE;
+    simMap[6][7] = ORANGE_TYPE;
+    simMap[8][6] = ORANGE_TYPE;
 
-    simMap[1][2] = BLACK_TYPE;
-    simMap[4][6] = BLACK_TYPE;
-    simMap[7][5] = BLACK_TYPE;
-    simMap[2][5] = BLACK_TYPE;
+    simMap[5][4] = BLACK_TYPE;
+    simMap[4][5] = BLACK_TYPE;
+    simMap[8][6] = BLACK_TYPE;
+    simMap[4][3] = BLACK_TYPE;
 
-    destinationBox[0].x = 7;
-    destinationBox[0].y = 1;
+    destinationBox[0].x = 8;
+    destinationBox[0].y = 2;
 
-    destinationBox[1].x = 2;
-    destinationBox[1].y = 7;
+    destinationBox[1].x = 3;
+    destinationBox[1].y = 8;
 
-    destinationDoubleBox.x = 6;
-    destinationDoubleBox.y = 5;
+    destinationDoubleBox.x = 7;
+    destinationDoubleBox.y = 6;
     destinationDoubleBox.type = DOUBLE_ORANGE_VERTICAL_TYPE;
 }
 
@@ -72,6 +74,8 @@ void initCar()
     car.x = startX;
     car.y = startY;
     car.direction = startDirection;
+    car.isPicking = 0;
+    car.orangePickingIndex = -1;
 }
 
 void printSimMap()
@@ -127,21 +131,38 @@ Box getNextBox(int direction)
 void moveForward(int block)
 {
     for (int i = 0; i < block; i++)
+    {
+        int horizontalCommand = 0, verticalCommand = 0;
+
         switch (car.direction)
         {
         case 0:
-            car.y--;
+            // car.y--;
+            verticalCommand = -1;
             break;
         case 1:
-            car.x++;
+            // car.x++;
+            horizontalCommand = 1;
             break;
         case 2:
-            car.y++;
+            // car.y++;
+            verticalCommand = 1;
             break;
         case 3:
-            car.x--;
+            // car.x--;
+            horizontalCommand = -1;
             break;
         }
+        car.x += horizontalCommand;
+        car.y += verticalCommand;
+        if (car.isPicking)
+        {
+            map[orangeBoxs[car.orangePickingIndex].y][orangeBoxs[car.orangePickingIndex].x] = NOT_REACH_TYPE;
+            orangeBoxs[car.orangePickingIndex].x += horizontalCommand;
+            orangeBoxs[car.orangePickingIndex].y += verticalCommand;
+            map[orangeBoxs[car.orangePickingIndex].y][orangeBoxs[car.orangePickingIndex].x] = ORANGE_TYPE;
+        }
+    }
 }
 
 void moveBack(int block)
@@ -174,6 +195,31 @@ void turn(int to)
     case 1:
         break;
     }
+    if (car.isPicking)
+    {
+        int x = car.x, y = car.y;
+        map[orangeBoxs[car.orangePickingIndex].y][orangeBoxs[car.orangePickingIndex].x] = NOT_REACH_TYPE;
+        switch (car.direction)
+        {
+        case NORTH_DIRECION:
+            y++;
+            break;
+        case EAST_DIRECION:
+            x--;
+            break;
+        case SOUTH_DIRECION:
+            y--;
+            break;
+        case WEST_DIRECION:
+            x++;
+            break;
+        }
+
+        orangeBoxs[car.orangePickingIndex].x = x;
+        orangeBoxs[car.orangePickingIndex].y = y;
+
+        map[orangeBoxs[car.orangePickingIndex].y][orangeBoxs[car.orangePickingIndex].x] = ORANGE_TYPE;
+    }
 }
 
 void turnTo(int direction)
@@ -196,9 +242,27 @@ void turnTo(int direction)
             turn(LEFT_HAND);
     }
 }
+
+void pick(int orangeIndex)
+{
+    car.isPicking = 1;
+    car.orangePickingIndex = orangeIndex;
+
+    printf("picked\n");
+    Box box = orangeBoxs[orangeIndex];
+
+    map[box.y][box.x] = NOT_REACH_TYPE;
+}
+
+void unPick()
+{
+    car.isPicking = 0;
+    car.orangePickingIndex = -1;
+}
+
 float calculateDistance(Box fromBox, Box toBox)
 {
-    return (fromBox.x - toBox.x) * (fromBox.x - toBox.x) + (fromBox.y - toBox.y) * (fromBox.y - fromBox.y);
+    return (fromBox.x - toBox.x) * (fromBox.x - toBox.x) + (fromBox.y - toBox.y) * (fromBox.y - toBox.y);
 }
 int scanLineBlock()
 {
@@ -323,9 +387,9 @@ void findBlock()
         {
             if (testMap[y][x] == BLACK_TYPE)
             {
-                blackBox[countBlackBox].x = x;
-                blackBox[countBlackBox++].y = y;
-                // printf("blackBox %d %d\n", x, y);
+                blackBoxs[countBlackBox].x = x;
+                blackBoxs[countBlackBox++].y = y;
+                // printf("blackBoxs %d %d\n", x, y);
             }
             else if (testMap[y][x] == ORANGE_TYPE)
             {
@@ -352,9 +416,9 @@ void findBlock()
                     }
                 }
 
-                orangeBox[countOrangeBox].x = x;
-                orangeBox[countOrangeBox++].y = y;
-                // printf("orangeBox %d %d\n", x, y);
+                orangeBoxs[countOrangeBox].x = x;
+                orangeBoxs[countOrangeBox++].y = y;
+                // printf("orangeBoxs %d %d\n", x, y);
             }
         }
     }
@@ -432,7 +496,7 @@ void moveJook(Box box)
 int isClearPath(int x, int y, int direction)
 {
     int isClear = 1;
-    while (x >= 0 && x < SIZE && y >= 0 && y < SIZE)
+    while (x > 0 && x < SIZE && y > 0 && y < SIZE)
     {
         switch (direction)
         {
@@ -452,6 +516,8 @@ int isClearPath(int x, int y, int direction)
         if (map[y][x] != NOT_REACH_TYPE)
         {
             isClear = 0;
+
+            // printf("%c [%d %d]\n",SYMBOL_DIRECTION[direction],x,y);
             break;
         }
     }
@@ -459,23 +525,176 @@ int isClearPath(int x, int y, int direction)
 }
 void goPushBox()
 {
+    int pair[2][2];
 
-    if (calculateDistance(orangeBox[0], destinationBox[0]) < calculateDistance(orangeBox[1], destinationBox[0]))
+    if (calculateDistance(orangeBoxs[0], destinationBox[0]) < calculateDistance(orangeBoxs[1], destinationBox[0]))
     {
-        int pair[][2] = {{0, 0}, {1, 1}};
+        pair[0][0] = 0;
+        pair[0][1] = 0;
+        pair[1][0] = 1;
+        pair[1][1] = 1;
     }
     else
     {
-        int pair[][2] = {{0, 1}, {1, 0}};
+
+        pair[0][0] = 0;
+        pair[0][1] = 1;
+        pair[1][0] = 1;
+        pair[1][1] = 0;
     }
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 1; i++)
     {
         //move block to border
-
-        for (int j = 0; j < SIZE; j++)
+        int orangeBoxIndex = pair[i][0];
+        int destinationBoxIndex = pair[i][1];
+        Box orange = orangeBoxs[orangeBoxIndex];
+        Box destination = destinationBox[destinationBoxIndex];
+        int borderSide;
+        printf("from [%d,%d] to [%d,%d]\n", orange.x, orange.y, destination.x, destination.y);
+        if (isClearPath(orange.x, orange.y, EAST_DIRECION))
         {
+            printf("EAST\n");
+            moveForward(SIZE - orange.y - 1);
+            turn(LEFT_HAND);
+            moveForward(SIZE - orange.x - 2);
+            turn(RIGHT_HAND);
+            turn(RIGHT_HAND);
+            pick(orangeBoxIndex);
+            moveForward(SIZE - car.x - 2);
+            turn(LEFT_HAND);
+            turn(LEFT_HAND);
+            // moveForward(1);
+            borderSide = EAST_DIRECION;
         }
+        else if (isClearPath(orange.x, orange.y, SOUTH_DIRECION))
+        {
+            printf("SOUTH\n");
+            turn(LEFT_HAND);
+            moveForward(SIZE - orange.x - 2);
+            turn(RIGHT_HAND);
+            moveForward(SIZE - orange.y - 2);
+            turn(LEFT_HAND);
+            turn(LEFT_HAND);
+            pick(orangeBoxIndex);
+            moveForward(SIZE - car.y - 2);
+            turn(RIGHT_HAND);
+            turn(RIGHT_HAND);
+            // moveForward(1);
+
+            borderSide = SOUTH_DIRECION;
+        }
+        else if (isClearPath(orange.x, orange.y, NORTH_DIRECION))
+        {
+            printf("NORTH\n");
+            moveForward(SIZE - 2);
+            turn(LEFT_HAND);
+            moveForward(SIZE - orange.x - 2);
+            turn(LEFT_HAND);
+            moveForward(orange.y - 1);
+            turn(RIGHT_HAND);
+            turn(RIGHT_HAND);
+            pick(orangeBoxIndex);
+            moveForward(orange.y - 2);
+            turn(RIGHT_HAND);
+            turn(RIGHT_HAND);
+            // moveForward(1);
+            borderSide = NORTH_DIRECION;
+            printf("car [%d,%d], orange [%d,%d]\n", car.x, car.y, orangeBoxs[orangeBoxIndex].x, orangeBoxs[orangeBoxIndex].y);
+        }
+        else if (isClearPath(orange.x, orange.y, WEST_DIRECION))
+        {
+            printf("WEST\n");
+            turn(LEFT_HAND);
+            moveForward(SIZE - 1);
+            turn(RIGHT_HAND);
+            moveForward(SIZE - orange.y - 1);
+            turn(RIGHT_HAND);
+            moveForward(orange.x - 1);
+            turn(LEFT_HAND);
+            turn(LEFT_HAND);
+            pick(orangeBoxIndex);
+            moveForward(orange.x - 2);
+            turn(RIGHT_HAND);
+            turn(RIGHT_HAND);
+            // moveForward(1);
+            borderSide = WEST_DIRECION;
+        }
+        else
+        {
+            printf("fialed\n");
+            borderSide = -1;
+        }
+
+        int isHasDoors[4];
+
+        int destinationDoors[4][2] = {{destination.x, 1},
+                                      {SIZE - 2, destination.y},
+                                      {destination.x, SIZE - 2},
+                                      {1, destination.y}};
+        float distanceEachDoor[4];
+
+        for (int i = 0; i < 4; i++)
+        {
+            isHasDoors[i] = isClearPath(destination.x, destination.y, i);
+            Box fromBox;
+            fromBox.x = car.x;
+            fromBox.y = car.y;
+            Box toBox;
+            toBox.x = destinationDoors[i][0];
+            toBox.y = destinationDoors[i][1];
+            distanceEachDoor[i] = isHasDoors[i] ? calculateDistance(fromBox, toBox) : 9999.0;
+            printf("%d %f\n", isHasDoors[i], distanceEachDoor[i]);
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = i; j < 4; j++)
+            {
+                if (distanceEachDoor[i] > distanceEachDoor[j])
+                {
+                    int temp = destinationDoors[i][0];
+                    destinationDoors[i][0] = destinationDoors[j][0];
+                    destinationDoors[j][0] = temp;
+
+                    temp = destinationDoors[i][1];
+                    destinationDoors[i][1] = destinationDoors[j][1];
+                    destinationDoors[j][1] = temp;
+                }
+            }
+        }
+
+        int diffHorizontal = destination.x - car.x;
+        int diffVertical = destination.y - car.y;
+
+        if (borderSide == NORTH_DIRECION || borderSide == SOUTH_DIRECION)
+        {
+            int lastDirection = car.direction;
+            if (diffHorizontal > 0)
+                turnTo(EAST_DIRECION);
+            else if (diffHorizontal < 0)
+                turnTo(WEST_DIRECION);
+            moveForward(_abs(diffHorizontal));
+            if (diffHorizontal > 0)
+                turnTo(lastDirection);
+            else if (diffHorizontal < 0)
+                turnTo(lastDirection);
+            moveForward(_abs(diffVertical) + 1);
+        }
+        else
+        {
+            int lastDirection = car.direction;
+            if (diffVertical > 0)
+                turnTo(SOUTH_DIRECION);
+            else if (diffVertical < 0)
+                turnTo(NORTH_DIRECION);
+            moveForward(_abs(diffVertical));
+            if (diffVertical > 0)
+                turnTo(lastDirection);
+            else if (diffVertical < 0)
+                turnTo(lastDirection);
+            moveForward(_abs(diffHorizontal) + 1);
+        }
+        printMap();
     }
 }
 
@@ -486,4 +705,5 @@ int main()
     printSimMap();
     search();
     findBlock();
+    goPushBox();
 }
