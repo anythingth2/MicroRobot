@@ -31,7 +31,7 @@ typedef struct _Car
 Car car;
 const int startX = 9, startY = 9, startDirection = NORTH_DIRECION;
 
-float KpColor = 0.09;
+float KpColor = 0.095;
 float KiColor = 0.0;
 //float KiColor = -0.00000001;
 float err;
@@ -51,15 +51,17 @@ void turn(int to)
     motor[leftMotor] = 15;
     motor[rightMotor] = 15;
     wait1Msec(100);
+    int angle = 800;
+    int _power = 80;
     if (to == RIGHT_HAND)
     {
-        moveMotorTarget(leftMotor, 180, basepower / 4);
-        moveMotorTarget(rightMotor, 180, -basepower / 4);
+        moveMotorTarget(leftMotor, angle, _power);
+        moveMotorTarget(rightMotor, angle, -_power);
     }
     else
     {
-        moveMotorTarget(leftMotor, 179, -basepower / 4);
-        moveMotorTarget(rightMotor, 179, basepower / 4);
+        moveMotorTarget(leftMotor, angle, -_power);
+        moveMotorTarget(rightMotor, angle, _power);
     }
     waitUntilMotorStop(leftMotor);
     waitUntilMotorStop(rightMotor);
@@ -188,7 +190,7 @@ void search()
                 }
                 // printf("found block at %d\n", foundBlockAt);
                 // getch();
-               // displayStringAt(0, 115 - 80, "foundBlockAt : %d", foundBlockAt);
+                // displayStringAt(0, 115 - 80, "foundBlockAt : %d", foundBlockAt);
                 moveForward(foundBlockAt);
                 map[car.y + verticalOffset][car.x + horizontalOffset] = readBlockType();
                 // printMap();
@@ -200,12 +202,14 @@ void search()
                 moveForward(foundBlockAt);
                 turn(LEFT_HAND);
                 //printMap();
-            }else{
+            }
+            else
+            {
 
-            	turn(RIGHT_HAND);
-          	}
+                turn(RIGHT_HAND);
+            }
             // printSimMap();
-          	eraseDisplay();
+            eraseDisplay();
             printMap();
             // printf("-------------------------------------------------------\n");
         }
@@ -220,12 +224,12 @@ void search()
 
 void pickUp()
 {
-    moveMotorTarget(motorC, 650, 80);
+    moveMotorTarget(motorC, 630, 50);
     waitUntilMotorStop(motorC);
 }
 void Drop()
 {
-    moveMotorTarget(motorC, -650, -80);
+    moveMotorTarget(motorC, -630, -50);
     waitUntilMotorStop(motorC);
 }
 void getColor() // color = 1 is black - color = 2 is orange
@@ -280,7 +284,7 @@ task main()
 
     initMap();
     initCar();
-    while(1){
-    	moveForward(10);
-  	}
+    motor[leftMotor] = 80;
+    motor[rightMotor] = -80;
+    wait10Msec(10000);
 }

@@ -53,9 +53,9 @@ void initMap()
     simMap[6][7] = ORANGE_TYPE;
     simMap[8][6] = ORANGE_TYPE;
 
-    simMap[5][4] = BLACK_TYPE;
-    simMap[4][5] = BLACK_TYPE;
-    simMap[8][6] = BLACK_TYPE;
+    simMap[5][3] = BLACK_TYPE;
+    simMap[5][5] = BLACK_TYPE;
+    simMap[8][4] = BLACK_TYPE;
     simMap[4][3] = BLACK_TYPE;
 
     destinationBox[0].x = 8;
@@ -424,9 +424,9 @@ void findBlock()
     }
 }
 
-void moveJook(Box box)
+void moveJook(int x, int y)
 {
-    while (car.x != box.x || car.y != box.y)
+    while (car.x != x || car.y != y)
     {
         if (getch() == 'q')
             return;
@@ -543,15 +543,16 @@ void goPushBox()
         pair[1][1] = 0;
     }
 
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < 2; i++)
     {
-        //move block to border
+
         int orangeBoxIndex = pair[i][0];
         int destinationBoxIndex = pair[i][1];
         Box orange = orangeBoxs[orangeBoxIndex];
         Box destination = destinationBox[destinationBoxIndex];
         int borderSide;
         printf("from [%d,%d] to [%d,%d]\n", orange.x, orange.y, destination.x, destination.y);
+        //move block to border
         if (isClearPath(orange.x, orange.y, EAST_DIRECION))
         {
             printf("EAST\n");
@@ -626,6 +627,7 @@ void goPushBox()
             borderSide = -1;
         }
 
+        //find shortest door
         int isHasDoors[4];
 
         int destinationDoors[4][2] = {{destination.x, 1},
@@ -666,6 +668,7 @@ void goPushBox()
         int diffHorizontal = destination.x - car.x;
         int diffVertical = destination.y - car.y;
 
+        //go to shortest door
         if (borderSide == NORTH_DIRECION || borderSide == SOUTH_DIRECION)
         {
             int lastDirection = car.direction;
@@ -694,6 +697,16 @@ void goPushBox()
                 turnTo(lastDirection);
             moveForward(_abs(diffHorizontal) + 1);
         }
+        //drop
+        unPick();
+
+        printMap();
+
+        turnTo(EAST_DIRECION);
+        moveJook(SIZE - 2, car.y);
+        turnTo(SOUTH_DIRECION);
+        moveJook(SIZE - 2, SIZE - 2);
+        turnTo(NORTH_DIRECION);
         printMap();
     }
 }
