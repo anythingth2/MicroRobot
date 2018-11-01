@@ -318,112 +318,6 @@ int readBlockType()
     // printf("check at %d %d\n", car.x + horizontalCommand, car.y + verticalCommand);
     return simMap[car.y + verticalCommand][car.x + horizontalCommand];
 }
-void search()
-{
-    for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < SIZE - 1; j++)
-        {
-            moveForward(1);
-
-            turn(LEFT_HAND);
-
-            int foundBlockAt = scanLineBlock();
-            if (foundBlockAt != -1)
-            {
-                int horizontalOffset = 0;
-                int verticalOffset = 0;
-                switch (car.direction)
-                {
-                case NORTH_DIRECION:
-                    verticalOffset = -1;
-                    break;
-                case EAST_DIRECION:
-                    horizontalOffset = 1;
-                    break;
-                case SOUTH_DIRECION:
-                    verticalOffset = 1;
-                    break;
-                case WEST_DIRECION:
-                    horizontalOffset = -1;
-                    break;
-                }
-                // printf("found block at %d\n", foundBlockAt);
-                // getch();
-
-                moveForward(foundBlockAt - 1);
-                map[car.y + verticalOffset][car.x + horizontalOffset] = readBlockType();
-                // printMap();
-                // getch();
-                moveBack(foundBlockAt - 1);
-                // printMap();
-            }
-
-            turn(RIGHT_HAND);
-            // printSimMap();
-            // printMap();
-            // printf("-------------------------------------------------------\n");
-        }
-        turn(LEFT_HAND);
-
-        // printSimMap();
-        // printMap();
-        // printf("-------------------------------------------------------\n");
-    }
-}
-void findBlock()
-{
-    int countBlackBox = 0;
-    int countOrangeBox = 0;
-
-    int testMap[SIZE][SIZE];
-    for (int i = 0; i < SIZE; i++)
-        for (int j = 0; j < SIZE; j++)
-            testMap[i][j] = map[i][j];
-
-    for (int y = 0; y < SIZE; y++)
-    {
-        for (int x = 0; x < SIZE; x++)
-        {
-            if (testMap[y][x] == BLACK_TYPE)
-            {
-                blackBoxs[countBlackBox].x = x;
-                blackBoxs[countBlackBox++].y = y;
-                // printf("blackBoxs %d %d\n", x, y);
-            }
-            else if (testMap[y][x] == ORANGE_TYPE)
-            {
-
-                if (x < SIZE - 2 && y < SIZE - 2)
-                {
-                    if (testMap[y][x + 1] == ORANGE_TYPE)
-                    {
-                        testMap[y][x + 1] = NOT_REACH_TYPE;
-                        doubleOrangeBox.x = x;
-                        doubleOrangeBox.y = y;
-                        doubleOrangeBox.type = DOUBLE_ORANGE_HORIZONTAL_TYPE;
-                        // printf("double horizontal %d %d\n", x, y);
-                        continue;
-                    }
-                    else if (testMap[y + 1][x] == ORANGE_TYPE)
-                    {
-                        testMap[y + 1][x] = NOT_REACH_TYPE;
-                        doubleOrangeBox.x = x;
-                        doubleOrangeBox.y = y;
-                        doubleOrangeBox.type = DOUBLE_ORANGE_VERTICAL_TYPE;
-                        // printf("double vertical %d %d\n", x, y);
-                        continue;
-                    }
-                }
-
-                orangeBoxs[countOrangeBox].x = x;
-                orangeBoxs[countOrangeBox++].y = y;
-                // printf("orangeBoxs %d %d\n", x, y);
-            }
-        }
-    }
-}
-
 void moveJook(int x, int y)
 {
     while (car.x != x || car.y != y)
@@ -493,6 +387,199 @@ void moveJook(int x, int y)
         printMap();
     }
 }
+void search()
+{
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < SIZE - 1; j++)
+        {
+            moveForward(1);
+
+            turn(LEFT_HAND);
+
+            int foundBlockAt = scanLineBlock();
+            if (foundBlockAt != -1)
+            {
+                int horizontalOffset = 0;
+                int verticalOffset = 0;
+                switch (car.direction)
+                {
+                case NORTH_DIRECION:
+                    verticalOffset = -1;
+                    break;
+                case EAST_DIRECION:
+                    horizontalOffset = 1;
+                    break;
+                case SOUTH_DIRECION:
+                    verticalOffset = 1;
+                    break;
+                case WEST_DIRECION:
+                    horizontalOffset = -1;
+                    break;
+                }
+                // printf("found block at %d\n", foundBlockAt);
+                // getch();
+
+                moveForward(foundBlockAt - 1);
+                map[car.y + verticalOffset][car.x + horizontalOffset] = readBlockType();
+                // printMap();
+                // getch();
+                moveBack(foundBlockAt - 1);
+                // printMap();
+            }
+
+            turn(RIGHT_HAND);
+            // printSimMap();
+            // printMap();
+            // printf("-------------------------------------------------------\n");
+        }
+        turn(LEFT_HAND);
+
+        // printSimMap();
+        // printMap();
+        // printf("-------------------------------------------------------\n");
+    }
+}
+int isFound()
+{
+    return readBlockType() != NOT_REACH_TYPE;
+}
+int readColor()
+{
+    return readBlockType();
+}
+void searchNew()
+{
+    moveForward(1);
+    turn(LEFT_HAND);
+
+    printMap();
+    int isLeft = 1;
+    int isOut = 0;
+    int lastY = -1;
+    for (int i = 2; i < SIZE - 2; i++)
+    {
+        while (!((isLeft && car.x == 2) || (!isLeft && car.x == SIZE - 2)))
+        {
+            if (getch() == 'q')
+                return;
+            if (isOut)
+            {
+                if (isLeft)
+                {
+                    turn(RIGHT_HAND);
+                    if (isFound())
+                    {
+                        // map[car.y][car.x]
+                    }
+                }
+                else
+                {
+                    turn(LEFT_HAND);
+                    if (isFound())
+                    {
+                           
+                    }
+                    else
+                    {
+                    }
+                }
+
+                if (lastY == car.y)
+                {
+                    isOut = 0;
+                }
+            }
+            else if (isFound())
+            {
+                isOut = 1;
+                lastY = car.y;
+                turnTo(SOUTH_DIRECION);
+            }
+            else
+            {
+                moveForward(1);
+            }
+            printf("==========\n");
+            printSimMap();
+            printMap();
+        }
+        if (getch() == 'q')
+            return;
+
+        if (isLeft)
+        {
+            turn(RIGHT_HAND);
+            moveForward(1);
+            turn(RIGHT_HAND);
+        }
+        else
+        {
+
+            turn(LEFT_HAND);
+            moveForward(1);
+            turn(LEFT_HAND);
+        }
+
+        isLeft = !isLeft;
+        printf("==========\n");
+        printSimMap();
+        printMap();
+    }
+}
+void findBlock()
+{
+    int countBlackBox = 0;
+    int countOrangeBox = 0;
+
+    int testMap[SIZE][SIZE];
+    for (int i = 0; i < SIZE; i++)
+        for (int j = 0; j < SIZE; j++)
+            testMap[i][j] = map[i][j];
+
+    for (int y = 0; y < SIZE; y++)
+    {
+        for (int x = 0; x < SIZE; x++)
+        {
+            if (testMap[y][x] == BLACK_TYPE)
+            {
+                blackBoxs[countBlackBox].x = x;
+                blackBoxs[countBlackBox++].y = y;
+                // printf("blackBoxs %d %d\n", x, y);
+            }
+            else if (testMap[y][x] == ORANGE_TYPE)
+            {
+
+                if (x < SIZE - 2 && y < SIZE - 2)
+                {
+                    if (testMap[y][x + 1] == ORANGE_TYPE)
+                    {
+                        testMap[y][x + 1] = NOT_REACH_TYPE;
+                        doubleOrangeBox.x = x;
+                        doubleOrangeBox.y = y;
+                        doubleOrangeBox.type = DOUBLE_ORANGE_HORIZONTAL_TYPE;
+                        // printf("double horizontal %d %d\n", x, y);
+                        continue;
+                    }
+                    else if (testMap[y + 1][x] == ORANGE_TYPE)
+                    {
+                        testMap[y + 1][x] = NOT_REACH_TYPE;
+                        doubleOrangeBox.x = x;
+                        doubleOrangeBox.y = y;
+                        doubleOrangeBox.type = DOUBLE_ORANGE_VERTICAL_TYPE;
+                        // printf("double vertical %d %d\n", x, y);
+                        continue;
+                    }
+                }
+
+                orangeBoxs[countOrangeBox].x = x;
+                orangeBoxs[countOrangeBox++].y = y;
+                // printf("orangeBoxs %d %d\n", x, y);
+            }
+        }
+    }
+}
+
 int isClearPath(int x, int y, int direction)
 {
     int isClear = 1;
@@ -716,7 +803,8 @@ int main()
     initMap();
     initCar();
     printSimMap();
-    search();
-    findBlock();
-    goPushBox();
+    searchNew();
+    // search();
+    // findBlock();
+    // goPushBox();
 }

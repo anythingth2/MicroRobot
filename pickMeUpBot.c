@@ -48,51 +48,72 @@ int fullBlackThreshold = 10;
 void turn(int to)
 {
     car.direction = (car.direction + to) & 0b11;
-    motor[leftMotor] = 15;
-    motor[rightMotor] = 15;
-    wait1Msec(100);
-    int angle = 800;
+    //motor[leftMotor] = 15;
+    //motor[rightMotor] = 15;
+    //wait1Msec(100);
+    int angle = 340;
+    int offset = 50;
     int _power = 80;
     if (to == RIGHT_HAND)
-    {
-        moveMotorTarget(leftMotor, angle, _power);
-        moveMotorTarget(rightMotor, angle, -_power);
-    }
-    else
     {
         moveMotorTarget(leftMotor, angle, -_power);
         moveMotorTarget(rightMotor, angle, _power);
     }
+    else
+    {
+        moveMotorTarget(leftMotor, angle, _power);
+        moveMotorTarget(rightMotor, angle,-_power);
+    }
     waitUntilMotorStop(leftMotor);
     waitUntilMotorStop(rightMotor);
+
+		moveMotorTarget(leftMotor,offset,-_power);
+		moveMotorTarget(rightMotor,offset,-_power);
+
+    waitUntilMotorStop(leftMotor);
+    waitUntilMotorStop(rightMotor);
+
 }
 void moveForward(int block)
 {
-
+		int offset = 200;
     sumErr = 0;
     for (int i = 0; i < block; i++)
     {
+    		resetMotorEncoder(leftMotor);
+    		resetMotorEncoder(rightMotor);
+    		int distance = 0;
         do
         {
             leftCol = getColorReflected(leftColor);
-            if (leftCol > 40)
-                leftCol = 40;
             rightCol = getColorReflected(rightColor);
-            if (rightCol > 40)
-                rightCol = 40;
             err = leftCol - rightCol;
             sumErr += err;
-
-            motor[leftMotor] = basepower + KpColor * err + KiColor * sumErr;
-            motor[rightMotor] = basepower - KpColor * err - KiColor * sumErr;
+            motor[leftMotor] = -(basepower + KpColor * err + KiColor * sumErr);
+            motor[rightMotor] = -(basepower - KpColor * err - KiColor * sumErr);
             wait1Msec(10);
-        } while (!(leftCol <= fullBlackThreshold && rightCol <= fullBlackThreshold));
+//          distance = -((getMotorEncoder(leftMotor) + getMotorEncoder(rightMotor)) / 2);
 
+        } while (!(leftCol <= fullBlackThreshold && rightCol <= fullBlackThreshold));
         while (leftCol <= fullBlackThreshold && rightCol <= fullBlackThreshold)
         {
             leftCol = getColorReflected(leftColor);
             rightCol = getColorReflected(rightColor);
         }
+        resetMotorEncoder(leftMotor);
+        resetMotorEncoder(rightMotor);
+        do
+        {
+            leftCol = getColorReflected(leftColor);
+            rightCol = getColorReflected(rightColor);
+            err = leftCol - rightCol;
+            sumErr += err;
+            motor[leftMotor] = -(basepower + KpColor * err + KiColor * sumErr);
+            motor[rightMotor] = -(basepower - KpColor * err - KiColor * sumErr);
+            wait1Msec(10);
+	          distance = -((getMotorEncoder(leftMotor) + getMotorEncoder(rightMotor)) / 2);
+
+        } while (distance < offset);
     }
 }
 
@@ -151,6 +172,26 @@ void printMap()
         }
     }
 }
+void getColor() // color = 1 is black - color = 2 is orange
+{
+    colorOfBox = SensorValue[S3];
+    if (colorOfBox >= 15 && colorOfBox <= 30)
+    {
+        color = 1; // black
+    }
+    else if (colorOfBox >= 45 && colorOfBox <= 50)
+    {
+        color = 2; //orange
+    }
+}
+void isFound()
+{
+    frontult = SensorValue[S2]; // ultrasonic
+    if (frontult <= 15)
+    {
+        getColor();
+    }
+}
 void search()
 {
     for (int i = 0; i < 4; i++)
@@ -158,12 +199,6 @@ void search()
 
         for (int j = 0; j < SIZE - 1; j++)
         {
-            // if (getch() == 'q')
-            // {
-            //     i = 5;
-            //     break;
-            // }
-            //eraseDisplay();
             moveForward(1);
 
             turn(LEFT_HAND);
@@ -221,7 +256,21 @@ void search()
         // printf("-------------------------------------------------------\n");
     }
 }
+void search2(){
 
+		moveForward(1);
+		turn(LEFT_HAND);
+		moveForward(1);
+
+		for(int i=0;i<SIZE-2;i++){
+			for(int j=0;j<SIZE-2;j++){
+					if(isFound()){
+
+					}
+			}
+		}
+
+}
 void pickUp()
 {
     moveMotorTarget(motorC, 630, 50);
@@ -232,26 +281,7 @@ void Drop()
     moveMotorTarget(motorC, -630, -50);
     waitUntilMotorStop(motorC);
 }
-void getColor() // color = 1 is black - color = 2 is orange
-{
-    colorOfBox = SensorValue[S3];
-    if (colorOfBox >= 15 && colorOfBox <= 30)
-    {
-        color = 1; // black
-    }
-    else if (colorOfBox >= 45 && colorOfBox <= 50)
-    {
-        color = 2; //orange
-    }
-}
-void isFound()
-{
-    frontult = SensorValue[S2]; // ultrasonic
-    if (frontult <= 15)
-    {
-        getColor();
-    }
-}
+
 
 void initMap()
 {
@@ -284,7 +314,5 @@ task main()
 
     initMap();
     initCar();
-    motor[leftMotor] = 80;
-    motor[rightMotor] = -80;
-    wait10Msec(10000);
+    search();
 }
