@@ -137,30 +137,29 @@ void printMap()
         }
         printf("\n");
     }
+    printf("car [%d,%d]\n", car.x, car.y);
     printf("\n");
 }
-
-Box getNextBox(int direction)
+Box nextBox;
+void getNextBox(int direction)
 {
-    Box box;
-    box.x = car.x;
-    box.y = car.y;
+    nextBox.x = car.x;
+    nextBox.y = car.y;
     switch (direction)
     {
     case NORTH_DIRECION:
-        box.y--;
+        nextBox.y--;
         break;
     case EAST_DIRECION:
-        box.x++;
+        nextBox.x++;
         break;
     case SOUTH_DIRECION:
-        box.y++;
+        nextBox.y++;
         break;
     case WEST_DIRECION:
-        box.x--;
+        nextBox.x--;
         break;
     }
-    return box;
 }
 void moveForward(int block)
 {
@@ -358,7 +357,8 @@ void moveJook(int x, int y)
     {
         if (!debug && getch() == 'q')
             return;
-        Box nextBlock = getNextBox(car.direction);
+        getNextBox(car.direction);
+        Box nextBlock = nextBox;
         if (map[nextBlock.y][nextBlock.x] == NOT_REACH_TYPE)
         {
             moveForward(1);
@@ -389,10 +389,12 @@ void moveJook(int x, int y)
                 }
                 if (!isStart)
                     isStart = 1;
-
-                Box leftBox = getNextBox((car.direction - 1) & 0b11);
-                Box frontBox = getNextBox(car.direction);
-                Box rightBox = getNextBox((car.direction + 1) & 0b11);
+                getNextBox((car.direction - 1) & 0b11);
+                Box leftBox = nextBox;
+                getNextBox(car.direction);
+                Box frontBox = nextBox;
+                getNextBox((car.direction + 1) & 0b11);
+                Box rightBox = nextBox;
 
                 if (map[leftBox.y][leftBox.x] == NOT_REACH_TYPE)
                 {
@@ -418,7 +420,7 @@ void moveJook(int x, int y)
             }
             turn(RIGHT_HAND);
         }
-        printMap();
+        // printMap();
     }
 }
 void search()
@@ -487,7 +489,7 @@ void searchNew()
 
     moveForward(1);
     turn(LEFT_HAND);
-    printMap();
+    // printMap();
     int isLeft = 1;
     int isOut = 0;
     int lastX = -1;
@@ -495,28 +497,31 @@ void searchNew()
     Box tempBox;
     for (int i = 2; i < SIZE - 2; i++)
     {
-        while (!((isLeft && car.x == 1) || (!isLeft && car.x == SIZE - 2)) || isOut )
+        while (!((isLeft && car.x == 1) || (!isLeft && car.x == SIZE - 2)) || isOut)
         {
             if (!debug && getch() == 'q')
                 return;
             if (isOut)
             {
-                printf("out\n");
+                // printf("out\n");
 
                 turn(LEFT_HAND);
                 if (isFound())
                 {
-                    tempBox = getNextBox(car.direction);
+                    getNextBox(car.direction);
+                    tempBox = nextBox;
                     map[tempBox.y][tempBox.x] = readColor();
                     turn(RIGHT_HAND);
                     if (isFound())
                     {
-                        tempBox = getNextBox(car.direction);
+                        getNextBox(car.direction);
+                        tempBox = nextBox;
                         map[tempBox.y][tempBox.x] = readColor();
                         turn(RIGHT_HAND);
                         if (isFound())
                         {
-                            tempBox = getNextBox(car.direction);
+                            getNextBox(car.direction);
+                            tempBox = nextBox;
                             map[tempBox.y][tempBox.x] = readColor();
                         }
                         else
@@ -550,11 +555,11 @@ void searchNew()
             {
                 turnTo(isLeft ? WEST_DIRECION : EAST_DIRECION);
                 isOut = 0;
-                printf("come back\n");
+                // printf("come back\n");
             }
-            printf("==========\n");
-            printSimMap();
-            printMap();
+            // printf("==========\n");
+            // printSimMap();
+            // printMap();
         }
         if (!debug && getch() == 'q')
             return;
@@ -574,10 +579,13 @@ void searchNew()
         }
 
         isLeft = !isLeft;
-        printf("==========\n");
-        printSimMap();
-        printMap();
+        // printf("==========\n");
+        // printSimMap();
+        // printMap();
     }
+    turnTo(SOUTH_DIRECION);
+    moveForward(SIZE - 3);
+    turnTo(NORTH_DIRECION);
 }
 void findBlock()
 {
@@ -701,7 +709,7 @@ void goPushBox()
             turn(RIGHT_HAND);
             turn(RIGHT_HAND);
             pick(orangeBoxIndex);
-            moveForward(SIZE - car.x - 2);
+            moveForward(SIZE - car.x - 1);
             turn(LEFT_HAND);
             turn(LEFT_HAND);
             // moveForward(1);
@@ -717,7 +725,7 @@ void goPushBox()
             turn(LEFT_HAND);
             turn(LEFT_HAND);
             pick(orangeBoxIndex);
-            moveForward(SIZE - car.y - 2);
+            moveForward(SIZE - car.y - 1);
             turn(RIGHT_HAND);
             turn(RIGHT_HAND);
             // moveForward(1);
@@ -735,12 +743,11 @@ void goPushBox()
             turn(RIGHT_HAND);
             turn(RIGHT_HAND);
             pick(orangeBoxIndex);
-            moveForward(orange.y - 2);
+            moveForward(orange.y - 1);
             turn(RIGHT_HAND);
             turn(RIGHT_HAND);
             // moveForward(1);
             borderSide = NORTH_DIRECION;
-            printf("car [%d,%d], orange [%d,%d]\n", car.x, car.y, orangeBoxs[orangeBoxIndex].x, orangeBoxs[orangeBoxIndex].y);
         }
         else if (isClearPath(orange.x, orange.y, WEST_DIRECION))
         {
@@ -754,7 +761,7 @@ void goPushBox()
             turn(LEFT_HAND);
             turn(LEFT_HAND);
             pick(orangeBoxIndex);
-            moveForward(orange.x - 2);
+            moveForward(orange.x - 1);
             turn(RIGHT_HAND);
             turn(RIGHT_HAND);
             // moveForward(1);
@@ -765,7 +772,8 @@ void goPushBox()
             printf("fialed\n");
             borderSide = -1;
         }
-
+        printf("move to border\n");
+        printMap();
         //find shortest door
         int isHasDoors[4];
 
@@ -852,16 +860,20 @@ void goPushBox()
 
 int main()
 {
-    debug =1;
+    debug = 1;
     initMap();
     randomMap();
     initCar();
 
     printSimMap();
+    printMap();
     searchNew();
 
-    // search();
-    // findBlock();
-    // goPushBox();
+    findBlock();
+    goPushBox();
+
+    printf("*********************\n\n\n");
+    printSimMap();
+    printMap();
     return 0;
 }
