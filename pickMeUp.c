@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <conio.h>
 #define SIZE 12
 int simMap[SIZE][SIZE];
@@ -17,7 +18,7 @@ const char SYMBOL_TYPE[] = {'-', '+', 'B', 'O'};
 #define LEFT_HAND -1
 #define RIGHT_HAND 1
 const char SYMBOL_DIRECTION[] = {'^', '>', 'v', '<'};
-
+int debug = 1;
 typedef struct _Car
 {
     int x, y;
@@ -48,15 +49,16 @@ void initMap()
             simMap[i][j] = NOT_REACH_TYPE;
             map[i][j] = NOT_REACH_TYPE;
         }
-    simMap[4][4] = ORANGE_TYPE;
-    simMap[6][8] = ORANGE_TYPE;
-    simMap[6][7] = ORANGE_TYPE;
-    simMap[8][6] = ORANGE_TYPE;
 
-    simMap[5][3] = BLACK_TYPE;
-    simMap[5][5] = BLACK_TYPE;
-    simMap[8][4] = BLACK_TYPE;
-    simMap[4][3] = BLACK_TYPE;
+    // simMap[4][4] = ORANGE_TYPE;
+    // simMap[6][8] = ORANGE_TYPE;
+    // simMap[6][7] = ORANGE_TYPE;
+    // simMap[8][6] = ORANGE_TYPE;
+
+    // simMap[5][3] = BLACK_TYPE;
+    // simMap[5][5] = BLACK_TYPE;
+    // simMap[8][4] = BLACK_TYPE;
+    // simMap[4][3] = BLACK_TYPE;
 
     destinationBox[0].x = 8;
     destinationBox[0].y = 2;
@@ -69,6 +71,38 @@ void initMap()
     destinationDoubleBox.type = DOUBLE_ORANGE_VERTICAL_TYPE;
 }
 
+void randomMap()
+{
+    srand(time(NULL));
+    int start = 2;
+    int stop = SIZE - 5;
+    int x = (rand()) % (stop) + start;
+    int y = (rand()) % (stop) + start;
+    for (int i = 0; i < 2; i++)
+    {
+        x = (rand()) % (stop) + start;
+        y = (rand()) % (stop) + start;
+        simMap[y][x] = ORANGE_TYPE;
+        printf("ORANGE\t[%d,%d]\n", x, y);
+    }
+    for (int i = 0; i < 4; i++)
+    {
+        x = (rand()) % (stop) + start;
+        y = (rand()) % (stop) + start;
+        simMap[y][x] = BLACK_TYPE;
+
+        printf("Black\t[%d,%d]\n", x, y);
+    }
+
+    x = (rand()) % (stop) + start;
+    y = (rand()) % (stop) + start;
+    simMap[y][x] = ORANGE_TYPE;
+    if (rand() % 2)
+        simMap[y][x + 1] = ORANGE_TYPE;
+    else
+        simMap[y + 1][x] = ORANGE_TYPE;
+    printf("DOUBLE ORANGE \t[%d,%d]\n", x, y);
+}
 void initCar()
 {
     car.x = startX;
@@ -322,7 +356,7 @@ void moveJook(int x, int y)
 {
     while (car.x != x || car.y != y)
     {
-        if (getch() == 'q')
+        if (!debug && getch() == 'q')
             return;
         Box nextBlock = getNextBox(car.direction);
         if (map[nextBlock.y][nextBlock.x] == NOT_REACH_TYPE)
@@ -337,7 +371,7 @@ void moveJook(int x, int y)
             turn(RIGHT_HAND);
             while (1)
             {
-                if (getch() == 'q')
+                if (!debug && getch() == 'q')
                     return;
                 if (isStart)
                 {
@@ -450,61 +484,79 @@ int readColor()
 }
 void searchNew()
 {
+
     moveForward(1);
     turn(LEFT_HAND);
-
     printMap();
     int isLeft = 1;
     int isOut = 0;
+    int lastX = -1;
     int lastY = -1;
+    Box tempBox;
     for (int i = 2; i < SIZE - 2; i++)
     {
-        while (!((isLeft && car.x == 2) || (!isLeft && car.x == SIZE - 2)))
+        while (!((isLeft && car.x == 1) || (!isLeft && car.x == SIZE - 2)) || isOut )
         {
-            if (getch() == 'q')
+            if (!debug && getch() == 'q')
                 return;
             if (isOut)
             {
-                if (isLeft)
+                printf("out\n");
+
+                turn(LEFT_HAND);
+                if (isFound())
                 {
+                    tempBox = getNextBox(car.direction);
+                    map[tempBox.y][tempBox.x] = readColor();
                     turn(RIGHT_HAND);
                     if (isFound())
                     {
-                        // map[car.y][car.x]
+                        tempBox = getNextBox(car.direction);
+                        map[tempBox.y][tempBox.x] = readColor();
+                        turn(RIGHT_HAND);
+                        if (isFound())
+                        {
+                            tempBox = getNextBox(car.direction);
+                            map[tempBox.y][tempBox.x] = readColor();
+                        }
+                        else
+                        {
+                            moveForward(1);
+                        }
+                    }
+                    else
+                    {
+                        moveForward(1);
                     }
                 }
                 else
                 {
-                    turn(LEFT_HAND);
-                    if (isFound())
-                    {
-                           
-                    }
-                    else
-                    {
-                    }
-                }
-
-                if (lastY == car.y)
-                {
-                    isOut = 0;
+                    moveForward(1);
                 }
             }
             else if (isFound())
             {
                 isOut = 1;
+                lastX = car.x;
                 lastY = car.y;
-                turnTo(SOUTH_DIRECION);
+                turnTo(isLeft ? NORTH_DIRECION : SOUTH_DIRECION);
             }
             else
             {
                 moveForward(1);
             }
+
+            if (car.y == lastY && ((isLeft && car.x < lastX) || (!isLeft && car.x > lastX)))
+            {
+                turnTo(isLeft ? WEST_DIRECION : EAST_DIRECION);
+                isOut = 0;
+                printf("come back\n");
+            }
             printf("==========\n");
             printSimMap();
             printMap();
         }
-        if (getch() == 'q')
+        if (!debug && getch() == 'q')
             return;
 
         if (isLeft)
@@ -800,11 +852,16 @@ void goPushBox()
 
 int main()
 {
+    debug =1;
     initMap();
+    randomMap();
     initCar();
+
     printSimMap();
     searchNew();
+
     // search();
     // findBlock();
     // goPushBox();
+    return 0;
 }
