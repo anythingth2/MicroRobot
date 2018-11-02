@@ -358,8 +358,8 @@ void moveJook(int x, int y)
         if (!debug && getch() == 'q')
             return;
         getNextBox(car.direction);
-        Box nextBlock = nextBox;
-        if (map[nextBlock.y][nextBlock.x] == NOT_REACH_TYPE)
+
+        if (map[nextBox.y][nextBox.x] == NOT_REACH_TYPE)
         {
             moveForward(1);
         }
@@ -390,11 +390,17 @@ void moveJook(int x, int y)
                 if (!isStart)
                     isStart = 1;
                 getNextBox((car.direction - 1) & 0b11);
-                Box leftBox = nextBox;
+                Box leftBox;
+                leftBox.x = nextBox.x;
+                leftBox.y = nextBox.y;
                 getNextBox(car.direction);
-                Box frontBox = nextBox;
+                Box frontBox;
+                frontBox.x = nextBox.x;
+                frontBox.y = nextBox.y;
                 getNextBox((car.direction + 1) & 0b11);
-                Box rightBox = nextBox;
+                Box rightBox;
+                rightBox.x = nextBox.x;
+                rightBox.y = nextBox.y;
 
                 if (map[leftBox.y][leftBox.x] == NOT_REACH_TYPE)
                 {
@@ -494,7 +500,7 @@ void searchNew()
     int isOut = 0;
     int lastX = -1;
     int lastY = -1;
-    Box tempBox;
+
     for (int i = 2; i < SIZE - 2; i++)
     {
         while (!((isLeft && car.x == 1) || (!isLeft && car.x == SIZE - 2)) || isOut)
@@ -509,20 +515,20 @@ void searchNew()
                 if (isFound())
                 {
                     getNextBox(car.direction);
-                    tempBox = nextBox;
-                    map[tempBox.y][tempBox.x] = readColor();
+
+                    map[nextBox.y][nextBox.x] = readColor();
                     turn(RIGHT_HAND);
                     if (isFound())
                     {
                         getNextBox(car.direction);
-                        tempBox = nextBox;
-                        map[tempBox.y][tempBox.x] = readColor();
+
+                        map[nextBox.y][nextBox.x] = readColor();
                         turn(RIGHT_HAND);
                         if (isFound())
                         {
                             getNextBox(car.direction);
-                            tempBox = nextBox;
-                            map[tempBox.y][tempBox.x] = readColor();
+
+                            map[nextBox.y][nextBox.x] = readColor();
                         }
                         else
                         {
